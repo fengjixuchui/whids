@@ -1,9 +1,9 @@
 package api
 
 import (
-	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -20,10 +20,10 @@ import (
 	"github.com/0xrawsec/sod"
 	"github.com/0xrawsec/whids/event"
 	"github.com/0xrawsec/whids/ioc"
+	"github.com/0xrawsec/whids/sysmon"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 
-	"github.com/0xrawsec/golang-utils/fsutil/fswalker"
 	"github.com/0xrawsec/golang-utils/log"
 )
 
@@ -49,28 +49,6 @@ func admApiParseTime(stimestamp string) (t time.Time, err error) {
 		return
 	}
 	return
-}
-
-func muxGetVar(rq *http.Request, name string) (string, error) {
-	vars := mux.Vars(rq)
-	if value, ok := vars[name]; ok {
-		return value, nil
-	}
-	return "", fmt.Errorf("unknown mux variable")
-}
-
-func format(format string, a ...interface{}) string {
-	return fmt.Sprintf(format, a...)
-}
-
-// read posted data and unseriablize it from JSON
-func readPostAsJSON(rq *http.Request, i interface{}) error {
-	defer rq.Body.Close()
-	b, err := ioutil.ReadAll(rq.Body)
-	if err != nil {
-		return fmt.Errorf("failed to read POST body: %w", err)
-	}
-	return json.Unmarshal(b, i)
 }
 
 // AdminAPIConfig configuration for Administrative API
@@ -122,6 +100,14 @@ func (r *AdminAPIResponse) ToJSON() []byte {
 		return sb
 	}
 	return b
+}
+
+// Err returns a response Error field in a form of a Go error
+func (r *AdminAPIResponse) Err() error {
+	if r.Error != "" {
+		return errors.New(r.Error)
+	}
+	return nil
 }
 
 func admErr(s interface{}) []byte {
@@ -193,7 +179,7 @@ func (m *Manager) admAPIUsers(wt http.ResponseWriter, rq *http.Request) {
 	case "PUT":
 		// verify that we have at least an identifier to create the user
 		if identifier == "" {
-			wt.Write(admErr("At least an identifier is needed to create user"))
+			wt.Write(admErr("at least an identifier is needed to create user"))
 			return
 		}
 
@@ -220,7 +206,7 @@ func (m *Manager) admAPIUsers(wt http.ResponseWriter, rq *http.Request) {
 
 		// verify that we have at least an identifier to create the user
 		if user.Identifier == "" {
-			wt.Write(admErr("At least an identifier is needed to create user"))
+			wt.Write(admErr("at least an identifier is needed to create user"))
 			return
 		}
 
@@ -295,10 +281,10 @@ func (m *Manager) admAPIUser(wt http.ResponseWriter, rq *http.Request) {
 			// return user anyway
 			wt.Write(admJSONResp(user))
 		} else if sod.IsNoObjectFound(err) {
-			wt.Write(admErr(format("Unknown user for uuid: %s", uuid)))
+			wt.Write(admErr(format("unknown user for uuid: %s", uuid)))
 		} else {
-			msg := format("Failed to search user in database: %s", err)
-			log.Error(msg)
+			msg := format("failed to search user in database: %s", err)
+			m.logAPIErrorf(msg)
 			wt.Write(admErr(msg))
 		}
 	} else {
@@ -307,6 +293,7 @@ func (m *Manager) admAPIUser(wt http.ResponseWriter, rq *http.Request) {
 }
 
 func (m *Manager) admAPIEndpoints(wt http.ResponseWriter, rq *http.Request) {
+
 	showKey, _ := strconv.ParseBool(rq.URL.Query().Get(qpShowKey))
 	group := rq.URL.Query().Get(qpGroup)
 	status := rq.URL.Query().Get(qpStatus)
@@ -315,39 +302,44 @@ func (m *Manager) admAPIEndpoints(wt http.ResponseWriter, rq *http.Request) {
 	switch {
 	case rq.Method == "GET":
 		// we return the list of all endpoints
-		endpoints := make([]*Endpoint, 0, m.endpoints.Len())
-		for _, endpt := range m.endpoints.Endpoints() {
-			// filter on group
-			if group != "" && endpt.Group != group {
-				continue
+		if endpoints, err := m.MutEndpoints(); err != nil {
+			wt.Write(admErr(err))
+		} else {
+			out := make([]*Endpoint, 0, len(endpoints))
+			for _, endpt := range endpoints {
+				// filter on group
+				if group != "" && endpt.Group != group {
+					continue
+				}
+				// filter on status
+				if status != "" && endpt.Status != status {
+					continue
+				}
+				if endpt.Criticality < int(criticality) {
+					continue
+				}
+				// never show command
+				endpt.Command = nil
+				if !showKey {
+					// to prevent modifying data in the db cache
+					endpt = endpt.Copy()
+					endpt.Key = ""
+				}
+				// score is updated at every call as it depends on all the other endpoints
+				endpt.Score = m.gene.reducer.BoundedScore(endpt.Uuid)
+				out = append(out, endpt)
 			}
-			// filter on status
-			if status != "" && endpt.Status != status {
-				continue
-			}
-			if endpt.Criticality < int(criticality) {
-				continue
-			}
-			// never show command
-			endpt.Command = nil
-			if !showKey {
-				endpt.Key = ""
-			}
-			// score is updated at every call as it depends on all the other endpoints
-			endpt.Score = m.reducer.BoundedScore(endpt.Uuid)
-			// add endpoint to the list to return
-			endpoints = append(endpoints, endpt)
+			wt.Write(admJSONResp(out))
 		}
-		wt.Write(NewAdminAPIResponse(endpoints).ToJSON())
 
 	case rq.Method == "PUT":
 		endpt := NewEndpoint(UUIDGen().String(), KeyGen(DefaultKeySize))
-		m.endpoints.Add(endpt)
+		m.db.InsertOrUpdate(endpt)
 		// save endpoint to database
 		if err := m.db.InsertOrUpdate(endpt); err != nil {
-			log.Errorf("Failed to save new endpoint")
+			m.logAPIErrorf("failed to save new endpoint")
 		}
-		wt.Write(NewAdminAPIResponse(endpt).ToJSON())
+		wt.Write(admJSONResp(endpt))
 	}
 }
 
@@ -359,7 +351,9 @@ func (m *Manager) admAPIEndpoint(wt http.ResponseWriter, rq *http.Request) {
 	newKey, _ := strconv.ParseBool(rq.URL.Query().Get(qpNewKey))
 
 	if euuid, err = muxGetVar(rq, "euuid"); err == nil {
-		if endpt, ok := m.endpoints.GetMutByUUID(euuid); ok {
+		if endpt, ok := m.MutEndpoint(euuid); ok {
+			var err error
+
 			switch rq.Method {
 			case "POST":
 				new := Endpoint{Criticality: -1}
@@ -378,11 +372,6 @@ func (m *Manager) admAPIEndpoint(wt http.ResponseWriter, rq *http.Request) {
 				}
 
 				if new.Criticality != -1 {
-					// we have to do further checks on criticality
-					if new.Criticality < 0 || new.Criticality > 10 {
-						wt.Write(admErr("criticality field must be in [0;10]"))
-						return
-					}
 					endpt.Criticality = new.Criticality
 				}
 
@@ -392,27 +381,32 @@ func (m *Manager) admAPIEndpoint(wt http.ResponseWriter, rq *http.Request) {
 				}
 
 				// save endpoint to database
-				if err := m.db.InsertOrUpdate(endpt); err != nil {
-					log.Errorf("Failed to save updated endpoint")
+				if err = m.db.InsertOrUpdate(endpt); err != nil {
+					m.logAPIErrorf("failed to save updated endpoint UUID=%s", euuid)
 				}
 
 			case "DELETE":
 				// deleting endpoints from live config
-				m.endpoints.DelByUUID(euuid)
-				if err := m.db.Delete(endpt); err != nil {
-					log.Errorf("Failed to delete endpoint from database")
+				if err = m.db.Delete(endpt); err != nil {
+					m.logAPIErrorf("failed to delete endpoint UUID=%s from database", euuid)
 				}
 			}
 
-			// we have to use the copy of the endpoint has we modify the key
-			endpt = endpt.Copy()
+			// score is updated at every call as it depends on all the other endpoints
+			endpt.Score = m.gene.reducer.BoundedScore(endpt.Uuid)
+
 			// we return the endpoint anyway
 			if !showKey {
+				// to prevent modifying struct in db cache
+				endpt = endpt.Copy()
 				endpt.Key = ""
 			}
-			// score is updated at every call as it depends on all the other endpoints
-			endpt.Score = m.reducer.BoundedScore(endpt.Uuid)
-			wt.Write(NewAdminAPIResponse(endpt).ToJSON())
+
+			apiResp := NewAdminAPIResponse(endpt)
+			if err != nil {
+				apiResp.Error = err.Error()
+			}
+			wt.Write(apiResp.ToJSON())
 		} else {
 			wt.Write(admErr(format("Unknown endpoint: %s", euuid)))
 		}
@@ -460,34 +454,38 @@ func (m *Manager) admAPIEndpointCommand(wt http.ResponseWriter, rq *http.Request
 	case "GET":
 		wait, _ := strconv.ParseBool(rq.URL.Query().Get(qpWait))
 		if euuid, err = muxGetVar(rq, "euuid"); err != nil {
-			wt.Write(NewAdminAPIRespError(err).ToJSON())
+			wt.Write(admErr(err))
 		} else {
-			if endpt, ok := m.endpoints.GetByUUID(euuid); ok {
+			if endpt, ok := m.MutEndpoint(euuid); ok {
 				if endpt.Command != nil {
 					for wait && !endpt.Command.Completed {
 						time.Sleep(time.Millisecond * 50)
 					}
 				}
-				wt.Write(NewAdminAPIResponse(endpt.Command).ToJSON())
+				wt.Write(admJSONResp(endpt.Command))
 			} else {
 				wt.Write(admErr(format("Unknown endpoint: %s", euuid)))
 			}
 		}
 	case "POST":
 		if euuid, err = muxGetVar(rq, "euuid"); err != nil {
-			wt.Write(NewAdminAPIRespError(err).ToJSON())
+			wt.Write(admErr(err))
 		} else {
-			if endpt, ok := m.endpoints.GetMutByUUID(euuid); ok {
+			if endpt, ok := m.MutEndpoint(euuid); ok {
 				c := CommandAPI{}
 				if err = readPostAsJSON(rq, &c); err != nil {
-					wt.Write(NewAdminAPIRespError(err).ToJSON())
+					wt.Write(admErr(err))
 				} else {
 					tmpCmd, err := c.ToCommand()
 					if err != nil {
 						wt.Write(admErr(format("Failed to create command to execute: %s", err)))
 					} else {
 						endpt.Command = tmpCmd
-						wt.Write(NewAdminAPIResponse(endpt).ToJSON())
+						if err := m.db.InsertOrUpdate(endpt); err != nil {
+							wt.Write(admErr(err))
+						} else {
+							wt.Write(admJSONResp(endpt))
+						}
 					}
 				}
 			} else {
@@ -502,25 +500,25 @@ func (m *Manager) admAPIEndpointCommandField(wt http.ResponseWriter, rq *http.Re
 	var err error
 
 	if euuid, err = muxGetVar(rq, "euuid"); err != nil {
-		wt.Write(NewAdminAPIRespError(err).ToJSON())
+		wt.Write(admErr(err))
 	} else {
-		if endpt, ok := m.endpoints.GetByUUID(euuid); ok {
+		if endpt, ok := m.MutEndpoint(euuid); ok {
 			if field, err = muxGetVar(rq, "field"); err != nil {
-				wt.Write(NewAdminAPIRespError(err).ToJSON())
+				wt.Write(admErr(err))
 			} else {
 				if endpt.Command != nil {
 					// success path
 					switch field {
 					case "stdout":
-						wt.Write(NewAdminAPIResponse(endpt.Command.Stdout).ToJSON())
+						wt.Write(admJSONResp(endpt.Command.Stdout))
 					case "stderr":
-						wt.Write(NewAdminAPIResponse(endpt.Command.Stderr).ToJSON())
+						wt.Write(admJSONResp(endpt.Command.Stderr))
 					case "error":
-						wt.Write(NewAdminAPIResponse(endpt.Command.Error).ToJSON())
+						wt.Write(admJSONResp(endpt.Command.Error))
 					case "completed":
-						wt.Write(NewAdminAPIResponse(endpt.Command.Completed).ToJSON())
+						wt.Write(admJSONResp(endpt.Command.Completed))
 					case "files", "fetch":
-						wt.Write(NewAdminAPIResponse(endpt.Command.Fetch).ToJSON())
+						wt.Write(admJSONResp(endpt.Command.Fetch))
 					default:
 						wt.Write(admErr(format("Field %s not handled", field)))
 					}
@@ -575,7 +573,6 @@ func (m *Manager) admAPIEndpointLogs(wt http.ResponseWriter, rq *http.Request) {
 	if pLast != "" {
 		if last, err = time.ParseDuration(pLast); err != nil {
 			if n, err := fmt.Sscanf(pLast, "%dd", &last); n != 1 || err != nil {
-				log.Infof("n=%d err=%s", n, err)
 				wt.Write(admErr("Failed to parse last parameter, it must be a valid Go time.Duration format"))
 				return
 			}
@@ -649,7 +646,7 @@ searchLogs:
 		return
 	}
 	if euuid, err = muxGetVar(rq, "euuid"); err != nil {
-		wt.Write(NewAdminAPIRespError(err).ToJSON())
+		wt.Write(admErr(err))
 	} else {
 		searcher := m.eventSearcher
 
@@ -659,7 +656,7 @@ searchLogs:
 
 		for rawEvent := range searcher.Events(start, stop, euuid, int(limit), int(skip)) {
 			if e, err := rawEvent.Event(); err != nil {
-				log.Errorf("Failed to encode event to JSON: %s", err)
+				m.logAPIErrorf("failed to encode event to JSON: %s", err)
 			} else {
 				logs = append(logs, e)
 			}
@@ -671,7 +668,7 @@ searchLogs:
 			return
 		}
 
-		wt.Write(NewAdminAPIResponse(logs).ToJSON())
+		wt.Write(admJSONResp(logs))
 	}
 }
 
@@ -680,11 +677,11 @@ func (m *Manager) admAPIEndpointReport(wt http.ResponseWriter, rq *http.Request)
 	var err error
 
 	if euuid, err = muxGetVar(rq, "euuid"); err != nil {
-		wt.Write(NewAdminAPIRespError(err).ToJSON())
+		wt.Write(admErr(err))
 	} else {
-		if endpt, ok := m.endpoints.GetByUUID(euuid); ok {
+		if endpt, ok := m.MutEndpoint(euuid); ok {
 			// we return the report anyway
-			rs := m.reducer.ReduceCopy(endpt.Uuid)
+			rs := m.gene.reducer.ReduceCopy(endpt.Uuid)
 			switch rq.Method {
 			case "GET":
 				wt.Write(admJSONResp(rs))
@@ -698,11 +695,11 @@ func (m *Manager) admAPIEndpointReport(wt http.ResponseWriter, rq *http.Request)
 
 					// we archive the report in database
 					if err := m.db.InsertOrUpdate(&ar); err != nil {
-						resp = NewAdminAPIRespErrorString(fmt.Sprintf("Failed to save archive: %s", err))
+						resp.Error = fmt.Sprintf("failed to save archive: %s", err)
 					}
 
 					// we reset reducer
-					m.reducer.Delete(endpt.Uuid)
+					m.gene.reducer.Delete(endpt.Uuid)
 
 					wt.Write(resp.ToJSON())
 				} else {
@@ -770,9 +767,9 @@ func (m *Manager) admAPIEndpointReportArchive(wt http.ResponseWriter, rq *http.R
 	}
 
 	if euuid, err = muxGetVar(rq, "euuid"); err != nil {
-		wt.Write(NewAdminAPIRespError(err).ToJSON())
+		wt.Write(admErr(err))
 	} else {
-		if endpt, ok := m.endpoints.GetByUUID(euuid); ok {
+		if endpt, ok := m.MutEndpoint(euuid); ok {
 			search := m.db.Search(&ArchivedReport{}, "Identifier", "=", endpt.Uuid).
 				And("ArchivedTimestamp", ">=", since).
 				And("ArchivedTimestamp", "<=", until)
@@ -792,10 +789,14 @@ func (m *Manager) admAPIEndpointReportArchive(wt http.ResponseWriter, rq *http.R
 
 func (m *Manager) admAPIEndpointsReports(wt http.ResponseWriter, rq *http.Request) {
 	out := make(map[string]*reducer.ReducedStats)
-	for _, e := range m.endpoints.MutEndpoints() {
-		out[e.Uuid] = m.reducer.ReduceCopy(e.Uuid)
+	if endpoints, err := m.MutEndpoints(); err != nil {
+		wt.Write(admErr(err))
+	} else {
+		for _, e := range endpoints {
+			out[e.Uuid] = m.gene.reducer.ReduceCopy(e.Uuid)
+		}
+		wt.Write(admJSONResp(out))
 	}
-	wt.Write(NewAdminAPIResponse(out).ToJSON())
 }
 
 type DumpFile struct {
@@ -927,9 +928,9 @@ func (m *Manager) admAPIEndpointArtifacts(wt http.ResponseWriter, rq *http.Reque
 	}
 
 	if euuid, err = muxGetVar(rq, "euuid"); err != nil {
-		wt.Write(NewAdminAPIRespError(err).ToJSON())
+		wt.Write(admErr(err))
 	} else {
-		if m.endpoints.HasByUUID(euuid) {
+		if _, ok := m.MutEndpoint(euuid); ok {
 			if dumps, err = listEndpointDumps(m.Config.DumpDir, euuid, since); err != nil {
 				wt.Write(admErr(format("Failed to list dumps, %s", err)))
 				return
@@ -1008,30 +1009,108 @@ func (m *Manager) admAPIEndpointArtifact(wt http.ResponseWriter, rq *http.Reques
 	}
 }
 
+func (m *Manager) admAPIEndpointSysmonConfig(wt http.ResponseWriter, rq *http.Request) {
+	var config = &sysmon.Config{}
+
+	format := rq.URL.Query().Get(qpFormat)
+	raw, _ := strconv.ParseBool(rq.URL.Query().Get(qpRaw))
+	sversion := rq.URL.Query().Get(qpVersion)
+
+	if os, err := muxGetVar(rq, "os"); err == nil {
+		switch rq.Method {
+		case "GET":
+			err = m.db.Search(&sysmon.Config{}, "OS", "=", os).
+				And("SchemaVersion", "=", sversion).AssignOne(&config)
+			if err == nil {
+				if format == "xml" {
+					if xml, err := config.XML(); err == nil {
+						if raw {
+							wt.Header().Set("Content-Type", "application/xml")
+							wt.Write(xml)
+						} else {
+							wt.Write(admJSONResp(string(xml)))
+						}
+					} else {
+						wt.Write(admErr(err))
+					}
+				} else {
+					wt.Write(admJSONResp(config))
+				}
+			} else {
+				wt.Write(admErr(err))
+			}
+
+		case "POST":
+			var new = &sysmon.Config{}
+
+			readPost := readPostAsJSON
+			if format == "xml" {
+				readPost = readPostAsXML
+			}
+
+			if err := readPost(rq, new); err == nil {
+				m.db.Search(&sysmon.Config{}, "OS", "=", os).
+					And("SchemaVersion", "=", new.SchemaVersion).AssignOne(&config)
+
+				new.Initialize(config.UUID())
+				// setting up configuration OS
+				new.OS = os
+				if err := m.db.InsertOrUpdate(new); err == nil {
+					// we return configuration
+					wt.Write(admJSONResp(new))
+				} else {
+					wt.Write(admErr(err))
+				}
+			} else {
+				wt.Write(admErr(err))
+			}
+
+		case "DELETE":
+			if o, err := m.db.Search(&sysmon.Config{}, "OS", "=", os).
+				And("SchemaVersion", "=", sversion).One(); err == nil {
+				if err = m.db.Delete(o); err == nil {
+					wt.Write(admJSONResp(o))
+				} else {
+					wt.Write(admErr(err))
+				}
+			} else {
+				wt.Write(admErr(err))
+			}
+		}
+	} else {
+		wt.Write(admErr(err))
+	}
+}
+
 type stats struct {
 	EndpointCount int `json:"endpoint-count"`
 	RuleCount     int `json:"rule-count"`
 }
 
 func (m *Manager) admAPIStats(wt http.ResponseWriter, rq *http.Request) {
-	s := stats{
-		EndpointCount: m.endpoints.Len(),
-		RuleCount:     m.geneEng.Count(),
+	if count, err := m.db.Count(&Endpoint{}); err != nil {
+		wt.Write(admErr(err))
+	} else {
+		s := stats{
+			EndpointCount: count,
+			RuleCount:     m.gene.engine.Count(),
+		}
+		wt.Write(admJSONResp(s))
 	}
-	wt.Write(NewAdminAPIResponse(s).ToJSON())
 }
 
 func (m *Manager) admAPIIocs(wt http.ResponseWriter, rq *http.Request) {
 
-	source := rq.URL.Query().Get("source")
-	key := rq.URL.Query().Get("key")
-	value := rq.URL.Query().Get("value")
-	itype := rq.URL.Query().Get("type")
+	source := rq.URL.Query().Get(qpSource)
+	guuid := rq.URL.Query().Get(qpGroupUuid)
+	uuid := rq.URL.Query().Get(qpUuid)
+	value := rq.URL.Query().Get(qpValue)
+	itype := rq.URL.Query().Get(qpType)
 
 	switch rq.Method {
 	case "GET":
-		if value == "" && source == "" && itype == "" && key == "" {
-			if objs, err := m.db.All(&ioc.IoC{}); err != nil {
+		if value == "" && source == "" && itype == "" && guuid == "" && uuid == "" {
+			if objs, err := m.db.All(&ioc.IOC{}); err != nil {
 				wt.Write(admErr(err))
 			} else {
 				wt.Write(admJSONResp(objs))
@@ -1039,10 +1118,11 @@ func (m *Manager) admAPIIocs(wt http.ResponseWriter, rq *http.Request) {
 			return
 		} else {
 			// searching out IoCs
-			if objs, err := m.db.Search(&ioc.IoC{}, "Value", "=", value).
+			if objs, err := m.db.Search(&ioc.IOC{}, "Value", "=", value).
 				Or("Source", "=", source).
 				Or("Type", "=", itype).
-				Or("Key", "=", key).
+				Or("GroupUuid", "=", guuid).
+				Or("Uuid", "=", uuid).
 				Collect(); err != nil {
 				wt.Write(admErr(err))
 			} else {
@@ -1052,43 +1132,90 @@ func (m *Manager) admAPIIocs(wt http.ResponseWriter, rq *http.Request) {
 		}
 
 	case "POST":
-		var iocs []*ioc.IoC
+		var iocs []*ioc.IOC
 		if err := readPostAsJSON(rq, &iocs); err != nil && rq.ContentLength > 0 {
 			wt.Write(admErr(err))
 		} else {
+
+			// we preprocess to update existing IOCs
+			insert := make([]*ioc.IOC, 0, len(iocs))
+			for _, i := range iocs {
+				// we need to apply transformation before searching otherwise we
+				// might not find some values which have been transformed
+				i.Transform()
+				search := m.db.Search(&ioc.IOC{},
+					"Uuid", "=", i.Uuid)
+				if o, err := search.One(); err == nil {
+					// in order to update existing IOCs
+					i.Initialize(o.UUID())
+				}
+
+				insert = append(insert, i)
+			}
+
 			// Do bulk insertion
-			if err := m.db.InsertOrUpdateMany(sod.ToObjectSlice(iocs)...); err != nil {
+			if err := m.db.InsertOrUpdateMany(sod.ToObjectSlice(insert)...); err != nil {
 				wt.Write(admErr(err))
 				return
 			}
+
 			// Add IoCs to sync with endpoints
-			m.iocs.Add(iocs...)
+			m.iocs.Add(insert...)
+			wt.Write(admJSONResp(insert))
 		}
 
 	case "DELETE":
-		search := m.db.Search(&ioc.IoC{}, "Value", "=", value)
-		if source != "" {
-			search = search.Or("Source", "=", source)
-		}
-		if itype != "" {
-			search = search.Or("Type", "=", itype)
-		}
-		if key != "" {
-			search = search.Or("Key", "=", key)
+		var search *sod.Search
+
+		if value != "" {
+			search = m.db.Search(&ioc.IOC{}, "Value", "=", value)
 		}
 
-		if objs, err := search.Collect(); err != nil {
-			wt.Write(admErr(err))
-		} else {
-			// Deletes all the entries matching the search
-			if err := search.Delete(); err != nil {
+		if source != "" {
+			if search == nil {
+				search = m.db.Search(&ioc.IOC{}, "Source", "=", source)
+			} else {
+				search = search.And("Source", "=", source)
+			}
+		}
+		if itype != "" {
+			if search == nil {
+				search = m.db.Search(&ioc.IOC{}, "Type", "=", itype)
+			} else {
+				search = search.And("Type", "=", itype)
+			}
+		}
+		if guuid != "" {
+			if search == nil {
+				search = m.db.Search(&ioc.IOC{}, "GroupUuid", "=", guuid)
+			} else {
+				search = search.And("GroupUuid", "=", guuid)
+			}
+		}
+		if uuid != "" {
+			if search == nil {
+				search = m.db.Search(&ioc.IOC{}, "Uuid", "=", uuid)
+			} else {
+				search = search.And("Uuid", "=", uuid)
+			}
+		}
+
+		if search != nil {
+			if objs, err := search.Collect(); err != nil {
 				wt.Write(admErr(err))
 			} else {
-				// deleting IoCs pushed to endpoints
-				m.iocs.Del(ioc.FromObjects(objs...)...)
-				// writing out deleted IoCs
-				wt.Write(admJSONResp(objs))
+				// Deletes all the entries matching the search
+				if err := search.Delete(); err != nil {
+					wt.Write(admErr(err))
+				} else {
+					// deleting IoCs pushed to endpoints
+					m.iocs.Del(ioc.FromObjects(objs...)...)
+					// writing out deleted IoCs
+					wt.Write(admJSONResp(objs))
+				}
 			}
+		} else {
+			wt.Write(admJSONResp(nil))
 		}
 		return
 	}
@@ -1096,228 +1223,108 @@ func (m *Manager) admAPIIocs(wt http.ResponseWriter, rq *http.Request) {
 
 func (m *Manager) admAPIRules(wt http.ResponseWriter, rq *http.Request) {
 	// used in case of POST / DELETE
-	rulesBasename := "compiled-updated.gen"
 
 	name := rq.URL.Query().Get(qpName)
 	filters, _ := strconv.ParseBool(rq.URL.Query().Get(qpFilters))
-	paramUpdate := rq.URL.Query().Get(qpUpdate)
+	update, _ := strconv.ParseBool(rq.URL.Query().Get(qpUpdate))
 
 	switch rq.Method {
 	case "GET":
-		rulesList := make([]engine.Rule, 0, m.geneEng.Count())
+
 		if name == "" {
 			name = ".*"
 		}
-		for r := range m.geneEng.GetRawRule(name) {
-			jr := engine.Rule{}
-			if err := json.Unmarshal([]byte(r), &jr); err != nil {
-				wt.Write(admErr(err.Error()))
-				return
+
+		if objs, err := m.db.Search(&EdrRule{}, "Name", "~=", name).Collect(); err != nil {
+			wt.Write(admErr(err))
+		} else {
+			rules := make([]*EdrRule, 0)
+			for _, o := range objs {
+				rule := o.(*EdrRule)
+				if filters && !rule.Meta.Filter {
+					continue
+				}
+				rules = append(rules, rule)
 			}
-			// we continue if we want filters and rule is not a filter
-			if filters && !jr.Meta.Filter {
-				continue
-			}
-			rulesList = append(rulesList, jr)
+			wt.Write(admJSONResp(rules))
 		}
-		wt.Write(NewAdminAPIResponse(rulesList).ToJSON())
 
 	case "DELETE":
-		// we want to be sure to be able to create the file before going on
-		newRulesPath := filepath.Join(m.Config.RulesDir, rulesBasename)
-		if m.geneEng.GetRawRuleByName(name) == "" {
-			wt.Write(admErr(format(`No such rule "%s", doing nothing`, name)))
-			return
-		}
 
-		fd, err := os.Create(format("%s.tmp", newRulesPath))
-		if err != nil {
-			wt.Write(admErr(format("Cannot create temporary file: %s", err)))
-			return
-		}
-		defer fd.Close()
-
-		// we delete previous rule files
-		for wi := range fswalker.Walk(m.Config.RulesDir) {
-			for _, fi := range wi.Files {
-				fp := filepath.Join(m.Config.RulesDir, fi.Name())
-				if engine.DefaultRuleExtensions.Contains(filepath.Ext(fp)) {
-					if err := os.Remove(fp); err != nil {
-						wt.Write(admErr(format("Failed to delete rule file: %s", err)))
-						return
-					}
-				}
+		search := m.db.Search(&EdrRule{}, "Name", "=", name)
+		if objs, err := search.Collect(); err != nil {
+			wt.Write(admErr(err))
+		} else {
+			if err := search.Delete(); err != nil {
+				wt.Write(admErr(err))
+			} else if err := m.initializeGeneFromDB(); err != nil {
+				// we need to re-init gene engine in case of update
+				wt.Write(admErr(err))
+			} else {
+				wt.Write(admJSONResp(objs))
 			}
 		}
-
-		// we update the rule file
-		for _, ruleName := range m.geneEng.GetRuleNames() {
-			if name != ruleName {
-				// we write as is the rules not needing updates
-				if _, err := fd.WriteString(format("%s\n", m.geneEng.GetRawRuleByName(ruleName))); err != nil {
-					wt.Write(admErr(format("Failed to write rule, updated rule file only contain partial results, a manual fix is required: %s", err)))
-					return
-				}
-			}
-		}
-
-		// close file before renaming
-		fd.Close()
-		if err := os.Rename(format("%s.tmp", newRulesPath), newRulesPath); err != nil {
-			wt.Write(admErr(format("Failed to rename temporary rule file, you must rename it manually: %s", err)))
-			return
-		}
-		wt.Write(admMsgStr("Rules updated succesfully, engine needs to be reloaded"))
 
 	case "POST":
-		m.Lock()
-		defer m.Unlock()
 		defer rq.Body.Close()
 
-		b, err := ioutil.ReadAll(rq.Body)
-		if err != nil {
-			wt.Write(admErr(format("Failed to read request body: %s", err)))
+		var rules []*EdrRule
+
+		dec := json.NewDecoder(rq.Body)
+		if err := dec.Decode(&rules); err != nil {
+			wt.Write(admErr(err))
 		} else {
-			// LoadReader also asses that the rules are all compilable
-			if err := m.geneEng.LoadReader(bytes.NewReader(b)); err != nil {
-				update, _ := strconv.ParseBool(paramUpdate)
-				// if we have the correct error and we want to replace existing rules
-				if _, ok := err.(engine.ErrRuleExist); ok && update {
-					// we want to be sure to be able to create the file before going on
-					newRulesPath := filepath.Join(m.Config.RulesDir, rulesBasename)
-					fd, err := os.Create(format("%s.tmp", newRulesPath))
-					if err != nil {
-						wt.Write(admErr(format("Cannot create temporary file: %s", err)))
-						return
-					}
-					defer fd.Close()
-
-					// we verify we can decode all the body
-					newRules := make(map[string]engine.Rule)
-					dec := json.NewDecoder(bytes.NewReader(b))
-					for {
-						jr := engine.Rule{}
-						err := dec.Decode(&jr)
-
-						if err == io.EOF {
-							break
-						}
-						if err != nil {
-							wt.Write(admErr(format("Failed to parse body content as JSON: %s", err)))
-							return
-						}
-						newRules[jr.Name] = jr
-					}
-
-					// we delete previous rule files
-					for wi := range fswalker.Walk(m.Config.RulesDir) {
-						for _, fi := range wi.Files {
-							fp := filepath.Join(m.Config.RulesDir, fi.Name())
-							if engine.DefaultRuleExtensions.Contains(filepath.Ext(fp)) {
-								if err := os.Remove(fp); err != nil {
-									wt.Write(admErr(format("Failed to delete rule file: %s", err)))
-									return
-								}
-							}
-						}
-					}
-
-					// we update the rule file
-					for _, name := range m.geneEng.GetRuleNames() {
-						// we write as is the rules not needing updates
-						if _, ok := newRules[name]; !ok {
-							if _, err := fd.WriteString(format("%s\n", m.geneEng.GetRawRuleByName(name))); err != nil {
-								wt.Write(admErr(format("Fail to write rule, new rule file only contain partial results, a manual fix is required: %s", err)))
-								return
-							}
-						}
-					}
-					for _, rule := range newRules {
-						json, _ := rule.JSON()
-						if _, err := fd.WriteString(format("%s\n", json)); err != nil {
-							wt.Write(admErr(format("Fail to write rule, new rule file only contain partial results, a manual fix is required: %s", err)))
-							return
-						}
-					}
-					// close file before renaming
-					fd.Close()
-					if err := os.Rename(format("%s.tmp", newRulesPath), newRulesPath); err != nil {
-						wt.Write(admErr(format("Fail to rename temporary rule file, you must rename it manually: %s", err)))
-						return
-					}
-					wt.Write(admMsgStr("Rules updated succesfully, engine needs to be reloaded"))
-				} else {
-					// we return an error because we don't want to replace existing rules
-					wt.Write(admErr(format("Error loading rule: %s", err)))
-				}
-			} else {
-				wt.Write(admMsgStr("Rules added successfully, please save rules for persistence"))
-			}
-		}
-	}
-}
-
-func (m *Manager) admAPIRulesReload(wt http.ResponseWriter, rq *http.Request) {
-	m.Lock()
-	defer m.Unlock()
-	// Gene engine initialization
-	if err := m.LoadGeneEngine(); err != nil {
-		wt.Write(admErr(format("Failed to reload engine: %s", err)))
-	} else {
-		// Gene Reducer initialization (used to generate reports)
-		m.reducer = reducer.NewReducer(m.geneEng)
-	}
-	m.admAPIStats(wt, rq)
-}
-
-func (m *Manager) admAPIRulesSave(wt http.ResponseWriter, rq *http.Request) {
-	rulesBasename := "compiled-updated.gen"
-	newRulesPath := filepath.Join(m.Config.RulesDir, rulesBasename)
-
-	// we want to be sure to be able to create the file before going on
-	fd, err := os.Create(format("%s.tmp", newRulesPath))
-	if err != nil {
-		wt.Write(admErr(format("Cannot create temporary file: %s", err)))
-		return
-	}
-
-	// we delete previous rule files
-	for wi := range fswalker.Walk(m.Config.RulesDir) {
-		for _, fi := range wi.Files {
-			fp := filepath.Join(m.Config.RulesDir, fi.Name())
-			if engine.DefaultRuleExtensions.Contains(filepath.Ext(fp)) {
-				if err := os.Remove(fp); err != nil {
-					wt.Write(admErr(format("Failed to delete rule file: %s", err)))
+			// we verify that we can compile rules
+			for _, rule := range rules {
+				eng := engine.NewEngine()
+				if _, err := rule.Compile(eng); err != nil {
+					// we abort API call
+					wt.Write(admErr(err))
 					return
 				}
 			}
+
+			// we add rules
+			for _, rule := range rules {
+				o, err := m.db.Search(&EdrRule{}, "Name", "=", rule.Name).One()
+				switch {
+				case err == nil:
+					if update {
+						// to be able to replace rule
+						rule.Initialize(o.UUID())
+					} else {
+						wt.Write(admErr(fmt.Sprintf(`rule %s already exist, use update URL parameter to force update`, rule.Name)))
+						return
+					}
+				case sod.IsNoObjectFound(err):
+					// we don't do anything
+				default:
+					// we abort API call
+					wt.Write(admErr(err))
+					return
+				}
+			}
+
+			if err := m.db.InsertOrUpdateMany(sod.ToObjectSlice(rules)...); err != nil {
+				err := fmt.Errorf("partial insert/update due to error: %s", err)
+				wt.Write(admErr(err))
+			} else if err := m.initializeGeneFromDB(); err != nil {
+				// we need to re-init gene engine in case of update
+				wt.Write(admErr(err))
+			} else {
+				wt.Write(admJSONResp(rules))
+			}
 		}
+
 	}
 
-	// we update the rule file
-	for _, ruleName := range m.geneEng.GetRuleNames() {
-		// we write as is the rules not needing updates
-		if _, err := fd.WriteString(format("%s\n", m.geneEng.GetRawRuleByName(ruleName))); err != nil {
-			wt.Write(admErr(format("Failed to write rule, updated rule file only contain partial results, a manual fix is required: %s", err)))
-			return
-		}
-	}
-
-	// close file before renaming
-	fd.Close()
-	if err := os.Rename(format("%s.tmp", newRulesPath), newRulesPath); err != nil {
-		wt.Write(admErr(format("Failed to rename temporary rule file, you must rename it manually: %s", err)))
-		return
-	}
-	wt.Write(admMsgStr("Rules saved succesfully on disk"))
-	defer fd.Close()
 }
 
-func wsHandleControlMessage(c *websocket.Conn) {
+func (m *Manager) wsHandleControlMessage(c *websocket.Conn) {
 	for {
 		if _, _, err := c.NextReader(); err != nil {
 			c.Close()
-			log.Errorf("Error in WS control handler: %s", err)
+			m.logAPIErrorf("error in WS control handler: %s", err)
 			break
 		}
 	}
@@ -1326,7 +1333,7 @@ func wsHandleControlMessage(c *websocket.Conn) {
 func (m *Manager) admAPIStreamEvents(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Errorf("StreamLogs, failed to upgrade to websocket: %s", err)
+		m.logAPIErrorf("failed to upgrade to websocket: %s", err)
 		return
 	}
 	defer c.Close()
@@ -1335,12 +1342,12 @@ func (m *Manager) admAPIStreamEvents(w http.ResponseWriter, r *http.Request) {
 	stream.Stream()
 	defer stream.Close()
 
-	go wsHandleControlMessage(c)
+	go m.wsHandleControlMessage(c)
 
 	for e := range stream.S {
 		err = c.WriteJSON(e)
 		if err != nil {
-			log.Errorf("Error in WriteJSON: %s", err)
+			m.logAPIErrorf("error in WriteJSON: %s", err)
 			break
 		}
 	}
@@ -1349,7 +1356,7 @@ func (m *Manager) admAPIStreamEvents(w http.ResponseWriter, r *http.Request) {
 func (m *Manager) admAPIStreamDetections(w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Errorf("StreamLogs, failed to upgrade to websocket: %s", err)
+		m.logAPIErrorf("failed to upgrade to websocket: %s", err)
 		return
 	}
 	defer c.Close()
@@ -1358,7 +1365,7 @@ func (m *Manager) admAPIStreamDetections(w http.ResponseWriter, r *http.Request)
 	stream.Stream()
 	defer stream.Close()
 
-	go wsHandleControlMessage(c)
+	go m.wsHandleControlMessage(c)
 
 	for e := range stream.S {
 		// check if event is associated to a detection
@@ -1394,7 +1401,6 @@ func (m *Manager) runAdminAPI() {
 		rt.Use(m.adminRespHeaderMiddleware)
 
 		// Routes initialization
-
 		rt.HandleFunc(AdmAPIUsers, m.admAPIUsers).Methods("GET", "PUT", "POST")
 		rt.HandleFunc(AdmAPIUserByID, m.admAPIUser).Methods("GET", "POST", "DELETE")
 		rt.HandleFunc(AdmAPIEndpointsPath, m.admAPIEndpoints).Methods("GET", "PUT")
@@ -1409,10 +1415,9 @@ func (m *Manager) runAdminAPI() {
 		rt.HandleFunc(AdmAPIEndpointsArtifactsPath, m.admAPIArtifacts).Methods("GET")
 		rt.HandleFunc(AdmAPIEndpointArtifacts, m.admAPIEndpointArtifacts).Methods("GET")
 		rt.HandleFunc(AdmAPIEndpointArtifact, m.admAPIEndpointArtifact).Methods("GET")
+		rt.HandleFunc(AdmAPIEndpointsSysmonConfig, m.admAPIEndpointSysmonConfig).Methods("GET", "POST", "DELETE")
 		rt.HandleFunc(AdmAPIIocsPath, m.admAPIIocs).Methods("GET", "POST", "DELETE")
 		rt.HandleFunc(AdmAPIRulesPath, m.admAPIRules).Methods("GET", "POST", "DELETE")
-		rt.HandleFunc(AdmAPIRulesReloadPath, m.admAPIRulesReload).Methods("GET")
-		rt.HandleFunc(AdmAPIRulesSavePath, m.admAPIRulesSave).Methods("GET")
 		rt.HandleFunc(AdmAPIStatsPath, m.admAPIStats).Methods("GET")
 		// WebSocket handlers
 		rt.HandleFunc(AdmAPIStreamEvents, m.admAPIStreamEvents)

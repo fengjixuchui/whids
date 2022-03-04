@@ -33,6 +33,7 @@ type InnerEvent struct {
 	*etw.Event
 	EdrData   *EdrData          `json:",omitempty"`
 	Detection *engine.Detection `json:",omitempty"`
+	skip      bool
 }
 
 type EdrEvent struct {
@@ -40,7 +41,7 @@ type EdrEvent struct {
 }
 
 func NewEdrEvent(e *etw.Event) *EdrEvent {
-	return &EdrEvent{InnerEvent{e, nil, nil}}
+	return &EdrEvent{InnerEvent{Event: e}}
 }
 
 func (e *EdrEvent) InitEdrData() {
@@ -54,11 +55,11 @@ func (e *EdrEvent) Hash() string {
 	return utils.HashEventBytes(utils.Json(tmp))
 }
 
-func (e *EdrEvent) GetStringOr(p engine.XPath, or string) (s string, ok bool) {
-	if s, ok = e.GetString(p); ok {
-		return
+func (e *EdrEvent) GetStringOr(p engine.XPath, or string) string {
+	if s, ok := e.GetString(p); ok {
+		return s
 	}
-	return or, ok
+	return or
 }
 
 func (e *EdrEvent) GetString(p engine.XPath) (s string, ok bool) {
@@ -84,11 +85,11 @@ func (e *EdrEvent) GetInt(p engine.XPath) (i int64, ok bool) {
 	return
 }
 
-func (e *EdrEvent) GetIntOr(p engine.XPath, or int64) (i int64, ok bool) {
-	if i, ok = e.GetInt(p); ok {
-		return
+func (e *EdrEvent) GetIntOr(p engine.XPath, or int64) int64 {
+	if i, ok := e.GetInt(p); ok {
+		return i
 	}
-	return or, ok
+	return or
 }
 
 func (e *EdrEvent) GetUint(p engine.XPath) (i uint64, ok bool) {
@@ -103,11 +104,11 @@ func (e *EdrEvent) GetUint(p engine.XPath) (i uint64, ok bool) {
 	return
 }
 
-func (e *EdrEvent) GetUintOr(p engine.XPath, or uint64) (i uint64, ok bool) {
-	if i, ok = e.GetUint(p); ok {
-		return
+func (e *EdrEvent) GetUintOr(p engine.XPath, or uint64) uint64 {
+	if u, ok := e.GetUint(p); ok {
+		return u
 	}
-	return or, ok
+	return or
 }
 
 func (e *EdrEvent) GetBool(p engine.XPath) (b bool, ok bool) {
@@ -152,9 +153,25 @@ func (e *EdrEvent) Set(p engine.XPath, i interface{}) (err error) {
 }
 
 func (e *EdrEvent) SetDetection(d *engine.Detection) {
-	// we make the choice not to set detection when it is empty
-	if d.Criticality > 0 || d.Signature.Len() > 0 || d.Actions.Len() > 0 || len(d.ATTACK) > 0 {
-		e.Event.Detection = d
+	if d != nil {
+		// we make the choice not to set detection when it is empty
+		if d.Criticality > 0 || len(d.ATTACK) > 0 {
+			e.Event.Detection = d
+			return
+		}
+		if d.Signature != nil {
+			if d.Signature.Len() > 0 {
+				e.Event.Detection = d
+				return
+			}
+		}
+		if d.Actions != nil {
+			if d.Actions.Len() > 0 {
+				e.Event.Detection = d
+				return
+
+			}
+		}
 	}
 }
 
@@ -175,6 +192,18 @@ func (e *EdrEvent) IsDetection() bool {
 		return e.Event.Detection.IsAlert()
 	}
 	return false
+}
+
+// Skip mark the event to be skipped subsequent calls
+// to IsSkipped will return true
+func (e *EdrEvent) Skip() {
+	e.Event.skip = true
+}
+
+// IsSkipped returns true if the event has been marked
+// to be skipped
+func (e *EdrEvent) IsSkipped() bool {
+	return e.Event.skip
 }
 
 func (e *EdrEvent) GetDetection() *engine.Detection {

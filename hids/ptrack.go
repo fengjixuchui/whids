@@ -8,6 +8,7 @@ import (
 	"github.com/0xrawsec/gene/v2/engine"
 	"github.com/0xrawsec/golang-utils/datastructs"
 	"github.com/0xrawsec/whids/event"
+	"github.com/0xrawsec/whids/utils"
 )
 
 type ConStat struct {
@@ -161,20 +162,14 @@ type ProcessTrack struct {
 	TimeTerminated         time.Time         `json:"time-terminated"`
 }
 
+var (
+	EmptyTrack = ProcessTrack{empty: true}
+)
+
 // NewProcessTrack creates a new processTrack structure enforcing
 // that minimal information is encoded (image, guid, pid)
 func EmptyProcessTrack() *ProcessTrack {
-	return &ProcessTrack{
-		empty:           true,
-		Signature:       "?",
-		SignatureStatus: "?",
-		PID:             -1,
-		Ancestors:       make([]string, 0),
-		Modules:         make([]*ModuleInfo, 0),
-		Integrity:       -1.0,
-		Stats:           NewProcStats(),
-		ThreatScore:     NewGeneScore(),
-	}
+	return &EmptyTrack
 }
 
 // NewProcessTrack creates a new processTrack structure enforcing
@@ -233,17 +228,17 @@ func ModuleInfoFromEvent(e *event.EdrEvent) (i *ModuleInfo) {
 	var ok bool
 
 	i = &ModuleInfo{}
-	i.Image, _ = e.GetStringOr(pathSysmonImageLoaded, "?")
-	i.FileVersion, _ = e.GetStringOr(pathSysmonFileVersion, "?")
-	i.Description, _ = e.GetStringOr(pathSysmonDescription, "?")
-	i.Product, _ = e.GetStringOr(pathSysmonProduct, "?")
-	i.Company, _ = e.GetStringOr(pathSysmonCompany, "?")
-	i.OriginalFileName, _ = e.GetStringOr(pathSysmonOriginalFileName, "?")
+	i.Image = e.GetStringOr(pathSysmonImageLoaded, "?")
+	i.FileVersion = e.GetStringOr(pathSysmonFileVersion, "?")
+	i.Description = e.GetStringOr(pathSysmonDescription, "?")
+	i.Product = e.GetStringOr(pathSysmonProduct, "?")
+	i.Company = e.GetStringOr(pathSysmonCompany, "?")
+	i.OriginalFileName = e.GetStringOr(pathSysmonOriginalFileName, "?")
 	if i.hashes, ok = e.GetString(pathSysmonHashes); ok {
 		i.Hashes = sysmonHashesToMap(i.hashes)
 	}
-	i.Signature, _ = e.GetStringOr(pathSysmonSignature, "?")
-	i.SignatureStatus, _ = e.GetStringOr(pathSysmonSignatureStatus, "?")
+	i.Signature = e.GetStringOr(pathSysmonSignature, "?")
+	i.SignatureStatus = e.GetStringOr(pathSysmonSignatureStatus, "?")
 	i.Signed, _ = e.GetBool(pathSysmonSigned)
 	i.LoadCount = 1
 	i.FirstLoad = e.Timestamp()
@@ -277,12 +272,12 @@ func DriverInfoFromEvent(e *event.EdrEvent) (i *DriverInfo) {
 
 	i = &DriverInfo{}
 
-	i.Image, _ = e.GetStringOr(pathSysmonImageLoaded, "?")
+	i.Image = e.GetStringOr(pathSysmonImageLoaded, "?")
 	if i.hashes, ok = e.GetString(pathSysmonHashes); ok {
 		i.HashesMap = sysmonHashesToMap(i.hashes)
 	}
-	i.Signature, _ = e.GetStringOr(pathSysmonSignature, "?")
-	i.SignatureStatus, _ = e.GetStringOr(pathSysmonSignatureStatus, "?")
+	i.Signature = e.GetStringOr(pathSysmonSignature, "?")
+	i.SignatureStatus = e.GetStringOr(pathSysmonSignatureStatus, "?")
 	i.Signed, _ = e.GetBool(pathSysmonSigned)
 
 	return
@@ -291,13 +286,17 @@ func DriverInfoFromEvent(e *event.EdrEvent) (i *DriverInfo) {
 type KernelFile struct {
 	FileName   string
 	FileObject uint64
+	EventCount map[int64]uint64
 }
 
 func KernelFileFromEvent(e *event.EdrEvent) (f *KernelFile) {
-	f = &KernelFile{}
+	f = &KernelFile{
+		EventCount: make(map[int64]uint64),
+	}
 
-	f.FileName, _ = e.GetStringOr(pathKernelFileFileName, "?")
-	f.FileObject, _ = e.GetUintOr(pathKernelFileFileObject, 0)
+	f.FileName = e.GetStringOr(pathKernelFileFileName, "?")
+	f.FileName = utils.ResolveCDrive(f.FileName)
+	f.FileObject = e.GetUintOr(pathKernelFileFileObject, 0)
 
 	return
 }
@@ -436,9 +435,9 @@ func (pt *ActivityTracker) GetParentByGuid(guid string) *ProcessTrack {
 	pt.RLock()
 	defer pt.RUnlock()
 	if c, ok := pt.guids[guid]; ok {
-		return pt.guids[c.ParentProcessGUID]
+		return pt.GetByGuid(c.ParentProcessGUID)
 	}
-	return nil
+	return EmptyProcessTrack()
 }
 
 // GetByPID get a process track by process GUID. If none is found an
@@ -524,14 +523,14 @@ func (pt *ActivityTracker) GetModuleOrUpdate(i *ModuleInfo) *ModuleInfo {
 }
 
 func (pt *ActivityTracker) IsTerminated(guid string) bool {
-	if t := pt.GetByGuid(guid); t != nil {
+	if t := pt.GetByGuid(guid); !t.IsZero() {
 		return t.Terminated
 	}
 	return true
 }
 
 func (pt *ActivityTracker) Terminate(guid string) error {
-	if t := pt.GetByGuid(guid); t != nil {
+	if t := pt.GetByGuid(guid); !t.IsZero() {
 		t.Terminated = true
 		t.TimeTerminated = time.Now()
 		// PID entry must be cleared as soon as possible

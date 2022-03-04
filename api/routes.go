@@ -11,6 +11,9 @@ const (
 	// EptAPIRulesSha256Path API route used to retrieve sha256 of latest batch of Gene rules
 	EptAPIRulesSha256Path = "/rules/sha256"
 
+	EptAPISysmonConfigPath       = "/sysmon/config"
+	EptAPISysmonConfigSha256Path = "/sysmon/config/sha256"
+
 	// EptAPIIoCsPath API route used to serve IOC container
 	EptAPIIoCsPath = "/iocs"
 	// EptAPIIoCsSha256Path API route used to serve sha256 of IOC container
@@ -22,6 +25,8 @@ const (
 	EptAPIPostLogsPath = "/logs"
 	// EptAPIPostDumpPath API route used to dump things
 	EptAPIPostDumpPath = "/upload/dumps"
+	// EptAPIPostSystemInfo API route used to send system information
+	EptAPIPostSystemInfo = "/info/system"
 
 	// GET and POST routes
 
@@ -34,6 +39,7 @@ var (
 		EptAPIServerKeyPath,
 		EptAPICommandPath,
 		EptAPIRulesSha256Path,
+		EptAPIIoCsSha256Path,
 	}
 )
 
@@ -44,13 +50,12 @@ const (
 	AdmAPIUsers    = "/users"
 	AdmAPIUserByID = AdmAPIUsers + "/{uuuid:" + uuidRe + "}"
 
-	AdmAPIStatsPath         = "/stats"
-	AdmAPIIocsPath          = "/iocs"
-	AdmAPIRulesPath         = "/rules"
-	AdmAPIRulesReloadPath   = "/rules/reload"
-	AdmAPIRulesSavePath     = "/rules/save"
-	AdmAPIEndpointsPath     = "/endpoints"
-	AdmAPIEndpointsByIDPath = AdmAPIEndpointsPath + "/{euuid:" + uuidRe + "}"
+	AdmAPIStatsPath             = "/stats"
+	AdmAPIIocsPath              = "/iocs"
+	AdmAPIRulesPath             = "/rules"
+	AdmAPIEndpointsPath         = "/endpoints"
+	AdmAPIEndpointsSysmonConfig = AdmAPIEndpointsPath + `/{os:\w+}/sysmon/config`
+	AdmAPIEndpointsByIDPath     = AdmAPIEndpointsPath + "/{euuid:" + uuidRe + "}"
 	// Command related
 	AdmAPICommandSuffix            = "/command"
 	AdmAPIEndpointCommandPath      = AdmAPIEndpointsByIDPath + AdmAPICommandSuffix

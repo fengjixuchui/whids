@@ -1,17 +1,21 @@
 package api
 
 import (
+	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"math/rand"
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/0xrawsec/golang-utils/crypto/data"
 	"github.com/0xrawsec/golang-utils/crypto/file"
 	"github.com/0xrawsec/golang-utils/fsutil/fswalker"
+	"github.com/0xrawsec/toast"
 	"github.com/0xrawsec/whids/ioc"
+	"github.com/0xrawsec/whids/os"
+	"github.com/0xrawsec/whids/sysmon"
 	"github.com/0xrawsec/whids/utils"
 )
 
@@ -28,53 +32,25 @@ var (
 )
 
 func TestClientGetRules(t *testing.T) {
-	key := KeyGen(DefaultKeySize)
 
-	r, err := NewManager(&mconf)
-	if err != nil {
-		panic(err)
-	}
-	r.AddEndpoint(cconf.UUID, key)
-	r.Run()
+	tt := toast.FromT(t)
+	m, c := prep()
+	defer cleanup(m)
 
-	cconf.Key = key
-	c, err := NewManagerClient(&cconf)
-	if err != nil {
-		panic(err)
-	}
 	rules, err := c.GetRules()
-	if err != nil {
-		t.Errorf("%s", err)
-	}
+	tt.CheckErr(err)
 
 	sha256, err := c.GetRulesSha256()
-	if err != nil {
-		t.Errorf("%s", err)
-	}
-	if sha256 != data.Sha256([]byte(rules)) {
-		t.Errorf("Rules integrity cannot be verified")
-	}
-
-	r.Shutdown()
-
+	tt.CheckErr(err)
+	tt.Assert(sha256 == data.Sha256([]byte(rules)))
 }
 
 func TestClientPostDump(t *testing.T) {
-	key := KeyGen(DefaultKeySize)
+	var err error
 
-	r, err := NewManager(&mconf)
-	if err != nil {
-		panic(err)
-	}
-	r.AddEndpoint(cconf.UUID, key)
-	r.Run()
-	defer r.Shutdown()
-
-	cconf.Key = key
-	c, err := NewManagerClient(&cconf)
-	if err != nil {
-		panic(err)
-	}
+	tt := toast.FromT(t)
+	m, c := prep()
+	defer cleanup(m)
 
 	for wi := range fswalker.Walk("./dumps") {
 		for _, fi := range wi.Files {
@@ -84,147 +60,99 @@ func TestClientPostDump(t *testing.T) {
 			ehash := sp[len(sp)-1]
 			path := filepath.Join(wi.Dirpath, fi.Name())
 
-			if shrink, err = NewUploadShrinker(path, guid, ehash); err != nil {
-				t.Errorf("Failed to prepare dump: %s", path)
-			}
+			shrink, err = NewUploadShrinker(path, guid, ehash)
+			tt.CheckErr(err)
+
 			for fu := shrink.Next(); fu != nil; fu = shrink.Next() {
-				if err = c.PostDump(fu); err != nil {
-					t.Error(err)
-				}
+				tt.CheckErr(c.PostDump(fu))
 			}
-			if shrink.Err() != nil {
-				t.Error(shrink.Err())
-			}
+
+			tt.CheckErr(shrink.Err())
 		}
 	}
 }
 func TestClientContainer(t *testing.T) {
 
-	key := KeyGen(DefaultKeySize)
-
-	m, err := NewManager(&mconf)
-	if err != nil {
-		panic(err)
-	}
-	m.AddEndpoint(cconf.UUID, key)
-	m.Run()
-	defer m.Shutdown()
-
-	cconf.Key = key
-	c, err := NewManagerClient(&cconf)
-	if err != nil {
-		panic(err)
-	}
+	tt := toast.FromT(t)
+	m, c := prep()
+	defer cleanup(m)
 
 	niocs := 1000
-	iocs := make([]ioc.IoC, 0, niocs)
+	iocs := make([]ioc.IOC, 0, niocs)
 	del := 0
+	guuid := UUIDGen().String()
+	toDelGuuid := UUIDGen().String()
 	for i := 0; i < niocs; i++ {
-		key := "test"
+		key := guuid
 		if rand.Int()%3 == 0 {
-			key = "to_delete"
+			key = toDelGuuid
 			del++
 		}
 
-		iocs = append(iocs, ioc.IoC{
-			Value: fmt.Sprintf("%d.random.com", i),
-			Key:   key})
+		iocs = append(iocs, ioc.IOC{
+			Uuid:      UUIDGen().String(),
+			GroupUuid: key,
+			Source:    "Test",
+			Value:     fmt.Sprintf("%d.random.com", i),
+			Type:      "domain",
+		})
 	}
-	post(AdmAPIIocsPath, JSON(iocs))
 
-	if iocs, err := c.GetIoCs(); err != nil {
-		t.Error(err)
-	} else {
-		if len(iocs) != niocs {
-			t.Error("Unexpected IOC length")
-		}
-		if rsha256, _ := c.GetIoCsSha256(); rsha256 != utils.Sha256StringArray(m.iocs.StringSlice()) {
-			t.Error("IOC container hash is not correct")
-		}
-	}
+	// posting IOCs to manager
+	r := post(AdmAPIIocsPath, JSON(iocs))
+	tt.CheckErr(r.Err())
+
+	// getting IOCs on client
+	strIocs, err := c.GetIoCs()
+	tt.CheckErr(err)
+	// we must have the same number of iocs
+	tt.Assert(len(strIocs) == niocs)
+	// we control that the integrity of what we received
+	rsha256, _ := c.GetIoCsSha256()
+	tt.Assert(rsha256 == utils.Sha256StringArray(strIocs))
 
 	// deleting iocs from admin API
-	r := prepare("DELETE",
+	req := prepare("DELETE",
 		AdmAPIIocsPath,
 		nil,
-		map[string]string{"key": "to_delete"})
-	do(r)
+		map[string]string{qpGroupUuid: toDelGuuid})
+	r = do(req)
+	tt.CheckErr(r.Err())
 
-	if iocs, err := c.GetIoCs(); err != nil {
-		t.Error(err)
-	} else {
-		if len(iocs) != niocs-del {
-			t.Errorf("Unexpected IOC length expected %d, got %d", niocs-del, len(iocs))
-		}
-		if rsha256, _ := c.GetIoCsSha256(); rsha256 != utils.Sha256StringArray(m.iocs.StringSlice()) {
-			t.Error("IOC container hash is not correct")
-		}
-	}
-
+	strIocs, err = c.GetIoCs()
+	tt.CheckErr(err)
+	tt.Assert(len(strIocs) == niocs-del)
+	rsha256, _ = c.GetIoCsSha256()
+	// control integrity of what we downloaded
+	tt.Assert(rsha256 == utils.Sha256StringArray(strIocs))
 }
 
 func TestClientExecuteCommand(t *testing.T) {
 	var cmd *Command
 	var err error
 
-	key := KeyGen(DefaultKeySize)
-
-	r, err := NewManager(&mconf)
-	if err != nil {
-		panic(err)
-	}
-	r.AddEndpoint(cconf.UUID, key)
-	r.Run()
-	defer r.Shutdown()
-
-	cconf.Key = key
-	c, err := NewManagerClient(&cconf)
-	if err != nil {
-		panic(err)
-	}
+	tt := toast.FromT(t)
+	m, c := prep()
+	defer cleanup(m)
 
 	cmd = NewCommand()
 
-	if err = cmd.SetCommandLine("/usr/bin/ls -hail ./"); err != nil {
-		t.Errorf("Failed at setting command line: %s", err)
-		t.Fail()
-	}
+	tt.CheckErr(cmd.SetCommandLine("/usr/bin/ls -hail ./"))
+	tt.CheckErr(m.AddCommand(cconf.UUID, cmd))
 
-	if err := r.AddCommand(cconf.UUID, cmd); err != nil {
-		t.Errorf("Failed to add command")
-		t.Fail()
-	}
+	// client fetching command to execute
+	cmd, err = c.FetchCommand()
+	tt.CheckErr(err)
+	// running command
+	tt.CheckErr(cmd.Run())
+	// posting back command to manager
+	tt.CheckErr(c.PostCommand(cmd))
 
-	if cmd, err := c.FetchCommand(); err != nil {
-		t.Errorf("Client failed to fetch command: %s", err)
-		t.FailNow()
-	} else {
-		if err := cmd.Run(); err != nil {
-			t.Errorf("Failed to run command: %s", err)
-			t.FailNow()
-		}
-		if err := c.PostCommand(cmd); err != nil {
-			t.Errorf("Failed to post command: %s", err)
-			t.FailNow()
-		}
-	}
-
-	cmd, err = r.GetCommand(cconf.UUID)
-	if err != nil {
-		t.Errorf("Client failed to get back command")
-		t.Fail()
-	}
-
-	if cmd.Stdout == nil {
-		t.Errorf("Expected output on stdout")
-		t.Fail()
-	}
-
-	t.Logf("%v", cmd.Stdout)
-	if len(cmd.Stdout) == 0 {
-		t.Errorf("Expected output on stdout")
-		t.Fail()
-	}
+	// manager fetching command
+	cmd, err = m.GetCommand(cconf.UUID)
+	tt.CheckErr(err)
+	// we expect some output
+	tt.Assert(len(cmd.Stdout) > 0)
 
 	t.Logf("Stdout of command executed: %s", string(cmd.Stdout))
 
@@ -233,86 +161,80 @@ func TestClientExecuteDroppedCommand(t *testing.T) {
 	var cmd *Command
 	var err error
 
-	key := KeyGen(DefaultKeySize)
-
-	r, err := NewManager(&mconf)
-	if err != nil {
-		panic(err)
-	}
-	r.AddEndpoint(cconf.UUID, key)
-	r.Run()
-	defer r.Shutdown()
-
-	// let the time to the server to start
-	time.Sleep(1 * time.Second)
-
-	cconf.Key = key
-	c, err := NewManagerClient(&cconf)
-	if err != nil {
-		panic(err)
-	}
+	tt := toast.FromT(t)
+	m, c := prep()
+	defer cleanup(m)
 
 	cmd = NewCommand()
+	// adding files to drop
+	tt.CheckErr(cmd.AddDropFile("droppedls", "/usr/bin/ls"))
 
-	if err = cmd.AddDropFile("droppedls", "/usr/bin/ls"); err != nil {
-		t.Errorf("Failed at preparing file to drop: %s", err)
-		t.FailNow()
-	}
-
+	// adding files to fetch
 	cmd.AddFetchFile("/usr/bin/ls")
 	cmd.AddFetchFile("/nonexistingfile")
 
-	if err = cmd.SetCommandLine("./droppedls -hail ./"); err != nil {
-		t.Errorf("Failed at setting command line: %s", err)
-		t.FailNow()
-	}
+	// setting up the command line to be executed
+	tt.CheckErr(cmd.SetCommandLine("./droppedls -hail ./"))
+	// create the command on manager's side
+	tt.CheckErr(m.AddCommand(cconf.UUID, cmd))
 
-	if err := r.AddCommand(cconf.UUID, cmd); err != nil {
-		t.Errorf("Failed to add command")
-		t.FailNow()
-	}
+	// fetching the command on client side
+	cmd, err = c.FetchCommand()
+	tt.CheckErr(err)
+	// running command
+	tt.CheckErr(cmd.Run())
+	// posting back command to manager
+	tt.CheckErr(c.PostCommand(cmd))
 
-	if cmd, err := c.FetchCommand(); err != nil {
-		t.Errorf("Client failed to fetch command: %s", err)
-		t.FailNow()
-	} else {
-		if err := cmd.Run(); err != nil {
-			t.Errorf("Failed to run command: %s", err)
-			t.FailNow()
-		}
-		if err := c.PostCommand(cmd); err != nil {
-			t.Errorf("Failed to post command: %s", err)
-			t.FailNow()
-		}
-	}
-
-	cmd, err = r.GetCommand(cconf.UUID)
-	if err != nil {
-		t.Errorf("Client failed to get back command")
-		t.FailNow()
-	}
-
-	if len(cmd.Stdout) == 0 {
-		t.Errorf("Expected output on stdout")
-		t.FailNow()
-	}
+	// getting command on manager's side
+	cmd, err = m.GetCommand(cconf.UUID)
+	tt.CheckErr(err)
+	// expecting some output on stdout
+	tt.Assert(len(cmd.Stdout) != 0)
 
 	t.Logf("Stdout of command executed: %s", string(cmd.Stdout))
 
 	expMD5, err := file.Md5("/usr/bin/ls")
-	if err != nil {
-		t.Logf("Failed to compute expected MD5: %s", err)
-		t.Fail()
-	}
+	tt.CheckErr(err)
+	// checking that the file we fetched corresponds to the one on disk
+	tt.Assert(data.Md5(cmd.Fetch["/usr/bin/ls"].Data) == expMD5)
+	// we must get an error for non existing file
+	tt.Assert(cmd.Fetch["/nonexistingfile"].Error != "")
 
-	if data.Md5(cmd.Fetch["/usr/bin/ls"].Data) != expMD5 {
-		t.Logf("Bad integrity check")
-		t.Fail()
-	}
-
-	if cmd.Fetch["/nonexistingfile"].Error == "" {
-		t.Logf("Failed to retrieve error")
-		t.Fail()
-	}
 	t.Logf(cmd.Fetch["/nonexistingfile"].Error)
+}
+
+func TestClientSysmonConfig(t *testing.T) {
+	var err error
+
+	sversion := "4.70"
+	tt := toast.FromT(t)
+	m, c := prep()
+	defer cleanup(m)
+
+	// test emptyness
+	sha256, err := c.GetSysmonConfigSha256(sversion)
+	tt.ExpectErr(err, ErrNoSysmonConfig)
+	tt.Assert(sha256 == "")
+
+	// preparing sysmon config structure
+	cfg := &sysmon.Config{}
+	tt.CheckErr(xml.Unmarshal([]byte(sysmonXMLConfig), &cfg))
+	cfg.OS = os.OS
+	cfgSha256, err := cfg.Sha256()
+	tt.CheckErr(err)
+
+	// adding sysmon config and testing sha256
+	tt.CheckErr(m.db.InsertOrUpdate(cfg))
+	sha256, err = c.GetSysmonConfigSha256(sversion)
+	tt.CheckErr(err)
+	tt.Assert(sha256 == cfgSha256)
+
+	remoteCfg, err := c.GetSysmonConfig(sversion)
+	tt.CheckErr(err)
+	tt.Assert(remoteCfg.XmlSha256 == sha256)
+
+	b, err := json.MarshalIndent(remoteCfg, "", "  ")
+	tt.CheckErr(err)
+	t.Log(string(b))
 }

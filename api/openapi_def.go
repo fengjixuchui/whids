@@ -74,11 +74,53 @@ var OpenAPIDefinition = `
                       "group": "",
                       "hostname": "OpenHappy",
                       "ip": "127.0.0.1",
-                      "key": "UJYWoN5eHeL2ade7i7Q96fUYD73ioohyUG5b89zsr618T5MwxiCvuEUL2r6eMClJ",
-                      "last-connection": "2021-12-10T14:57:53.736740431Z",
-                      "last-detection": "2021-12-10T15:57:52.656748907+01:00",
-                      "score": 100,
+                      "key": "Td5Pscqc1geRMYlqVaW8xpt8tlVeODNFMJrugyenPk37V6QVCH8HlKd3XjRjXr1z",
+                      "last-connection": "2022-03-04T13:20:12.009372983Z",
+                      "last-detection": "2022-03-04T14:20:10.935434116+01:00",
+                      "score": 0,
                       "status": "",
+                      "system-info": {
+                        "bios": {
+                          "date": "12/01/2006",
+                          "version": "VirtualBox"
+                        },
+                        "cpu": {
+                          "count": 4,
+                          "name": "Intel(R) Core(TM) i7-8565U CPU @ 1.80GHz"
+                        },
+                        "os": {
+                          "build": "18362",
+                          "edition": "Enterprise",
+                          "name": "windows",
+                          "product": "Windows 10 Pro",
+                          "version": "10.0.18362"
+                        },
+                        "sysmon": {
+                          "config": {
+                            "hash": "2d1652d67b565cabf2e774668f2598188373e957ef06aa5653bf9bf6fe7fe837",
+                            "version": {
+                              "binary": "15.0",
+                              "schema": "4.70"
+                            }
+                          },
+                          "driver": {
+                            "image": "C:\\Windows\\SysmonDrv.sys",
+                            "name": "SysmonDrv",
+                            "sha256": "e9ea8c0390c65c055d795b301ee50de8f8884313530023918c2eea56de37a525"
+                          },
+                          "service": {
+                            "image": "C:\\Program Files\\Whids\\Sysmon64.exe",
+                            "name": "Sysmon64",
+                            "sha256": "b448cd80b09fa43a3848f5181362ac52ffcb283f88693b68f1a0e4e6ae932863"
+                          },
+                          "version": "v13.23"
+                        },
+                        "system": {
+                          "manufacturer": "innotek GmbH",
+                          "name": "VirtualBox",
+                          "virtual": true
+                        }
+                      },
                       "uuid": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d"
                     }
                   ],
@@ -106,12 +148,12 @@ var OpenAPIDefinition = `
                     "group": "",
                     "hostname": "",
                     "ip": "",
-                    "key": "NwYzrlynQ0JPojtgJJkh1tJsydgaCjy0KcnMNmscvGzK6Et5TsiMzFDdcdiQEqHv",
+                    "key": "wKx06x5HRbqNR6yv2PE09yjFOJNgEOTBYqqHhaekePEBVYT2eChcsQ7fWVLSvzWz",
                     "last-connection": "0001-01-01T00:00:00Z",
                     "last-detection": "0001-01-01T00:00:00Z",
                     "score": 0,
                     "status": "",
-                    "uuid": "246cc048-49f6-48cf-e665-e816f82df4b8"
+                    "uuid": "5e26acb9-d863-bdab-52ef-11327b7c7b56"
                   },
                   "error": "",
                   "message": "OK"
@@ -151,21 +193,21 @@ var OpenAPIDefinition = `
                     "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d": [
                       {
                         "base-url": "/endpoints/5a92baeb-9384-47d3-92b4-a0db6f9b8c6d/artifacts/5a92baeb-9384-47d3-92b4-a0db6f9b8c6d/3d8441643c204ba9b9dcb5c414b25a3129f66f6c/",
-                        "creation": "2021-12-10T14:57:58.297934684Z",
+                        "creation": "2022-03-04T13:20:15.421761012Z",
                         "event-hash": "3d8441643c204ba9b9dcb5c414b25a3129f66f6c",
                         "files": [
                           {
                             "name": "bar.txt",
                             "size": 4,
-                            "timestamp": "2021-12-10T14:57:58.307934683Z"
+                            "timestamp": "2022-03-04T13:20:15.43509437Z"
                           },
                           {
                             "name": "foo.txt",
                             "size": 4,
-                            "timestamp": "2021-12-10T14:57:58.297934684Z"
+                            "timestamp": "2022-03-04T13:20:15.421761012Z"
                           }
                         ],
-                        "modification": "2021-12-10T14:57:58.307934683Z",
+                        "modification": "2022-03-04T13:20:15.43509437Z",
                         "process-guid": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d"
                       }
                     ]
@@ -194,46 +236,881 @@ var OpenAPIDefinition = `
                   "data": {
                     "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d": {
                       "alert-count": 50,
-                      "alert-criticality-metric": 864,
-                      "avg-alert-criticality": 8.64,
-                      "avg-signature-criticality": 8.64,
-                      "bounded-score": 100,
+                      "alert-criticality-metric": 0,
+                      "avg-alert-criticality": 0,
+                      "avg-signature-criticality": 0,
+                      "bounded-score": 0,
                       "count-by-signature": {
-                        "DefenderConfigChanged": 2,
-                        "NewAutorun": 11,
-                        "SuspiciousService": 7,
-                        "UnknownServices": 13,
-                        "UntrustedDriverLoaded": 17
+                        "DefenderConfigChanged": 3,
+                        "NewAutorun": 17,
+                        "SuspiciousService": 4,
+                        "UnknownServices": 8,
+                        "UntrustedDriverLoaded": 18
                       },
                       "count-uniq-signatures": 5,
                       "identifier": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d",
-                      "median-time": "2021-12-10T15:57:54.940294227+01:00",
-                      "score": 909,
+                      "median-time": "2022-03-04T14:20:13.218428238+01:00",
+                      "score": 0,
                       "signature-count": 50,
-                      "signature-criticality-metric": 45,
+                      "signature-criticality-metric": 0,
                       "signature-diversity": 100,
                       "signatures": [
-                        "DefenderConfigChanged",
-                        "UnknownServices",
                         "UntrustedDriverLoaded",
                         "NewAutorun",
-                        "SuspiciousService"
+                        "DefenderConfigChanged",
+                        "SuspiciousService",
+                        "UnknownServices"
                       ],
-                      "start-time": "2021-12-10T15:57:54.939026336+01:00",
-                      "std-dev-alert-criticality": 2.05,
-                      "std-dev-signature-criticality": 2.05,
-                      "stop-time": "2021-12-10T15:57:54.941562119+01:00",
-                      "sum-alert-criticality": 432,
-                      "sum-rule-criticality": 432,
-                      "tactics": [
-                        "Defense Evasion",
-                        "persistence"
-                      ],
-                      "techniques": [
-                        "T1014",
-                        "T1060"
-                      ]
+                      "start-time": "2022-03-04T14:20:13.216631809+01:00",
+                      "std-dev-alert-criticality": 0,
+                      "std-dev-signature-criticality": -92233720368547760,
+                      "stop-time": "2022-03-04T14:20:13.220224668+01:00",
+                      "sum-alert-criticality": 0,
+                      "sum-rule-criticality": 0,
+                      "tactics": null,
+                      "techniques": null
                     }
+                  },
+                  "error": "",
+                  "message": "OK"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/endpoints/{os}/sysmon/config": {
+      "get": {
+        "tags": [
+          "Manage sysmon configuration"
+        ],
+        "summary": "Get a sysmon configuration",
+        "parameters": [
+          {
+            "name": "os",
+            "in": "path",
+            "description": "os path parameter",
+            "required": true,
+            "allowEmptyValue": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "description": "version query parameter",
+            "required": true,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "description": "format query parameter",
+            "required": false,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "raw",
+            "in": "query",
+            "description": "raw query parameter",
+            "required": false,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTTP 200 response",
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": {
+                    "CheckRevocation": false,
+                    "CopyOnDeletePE": false,
+                    "DnsLookup": false,
+                    "EventFiltering": {
+                      "ClipboardChange": {
+                        "onmatch": "exclude"
+                      },
+                      "CreateRemoteThread": {
+                        "onmatch": "exclude"
+                      },
+                      "DriverLoad": {
+                        "onmatch": "exclude"
+                      },
+                      "FileCreate": {
+                        "onmatch": "exclude"
+                      },
+                      "FileCreateStreamHash": {
+                        "onmatch": "exclude"
+                      },
+                      "FileCreateTime": {
+                        "onmatch": "exclude"
+                      },
+                      "FileDelete": {
+                        "onmatch": "exclude"
+                      },
+                      "FileDeleteDetected": {
+                        "onmatch": "exclude"
+                      },
+                      "NetworkConnect": {
+                        "onmatch": "exclude"
+                      },
+                      "PipeEvent": {
+                        "onmatch": "exclude"
+                      },
+                      "ProcessCreate": {
+                        "onmatch": "exclude"
+                      },
+                      "ProcessTampering": {
+                        "onmatch": "exclude"
+                      },
+                      "ProcessTerminate": {
+                        "onmatch": "exclude"
+                      },
+                      "RawAccessRead": {
+                        "onmatch": "exclude"
+                      },
+                      "RuleGroup": [
+                        {
+                          "ImageLoad": {
+                            "Image": [
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\Sysmon.exe"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\Sysmon64.exe"
+                              }
+                            ],
+                            "Signature": [
+                              {
+                                "condition": "is",
+                                "value": "Microsoft Windows Publisher"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "Microsoft Corporation"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "Microsoft Windows"
+                              }
+                            ],
+                            "onmatch": "exclude"
+                          },
+                          "groupRelation": "or"
+                        },
+                        {
+                          "ProcessAccess": {
+                            "GrantedAccess": [
+                              {
+                                "condition": "is",
+                                "value": "0x1000"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "0x2000"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "0x3000"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "0x100000"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "0x101000"
+                              }
+                            ],
+                            "SourceImage": [
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\system32\\wbem\\wmiprvse.exe"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\System32\\VBoxService.exe"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\system32\\taskmgr.exe"
+                              }
+                            ],
+                            "onmatch": "exclude"
+                          },
+                          "groupRelation": "or"
+                        },
+                        {
+                          "RegistryEvent": {
+                            "EventType": [
+                              {
+                                "condition": "is not",
+                                "value": "SetValue"
+                              }
+                            ],
+                            "Image": [
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\Sysmon.exe"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\Sysmon64.exe"
+                              }
+                            ],
+                            "onmatch": "exclude"
+                          },
+                          "groupRelation": "or"
+                        },
+                        {
+                          "DnsQuery": {
+                            "Image": [
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\Sysmon.exe"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\Sysmon64.exe"
+                              }
+                            ],
+                            "onmatch": "exclude"
+                          },
+                          "groupRelation": "or"
+                        }
+                      ],
+                      "WmiEvent": {
+                        "onmatch": "exclude"
+                      }
+                    },
+                    "HashAlgorithms": [
+                      "*"
+                    ],
+                    "OS": "windows",
+                    "XmlSha256": "9a7261a6bb857d35dbc1d9cb810692304a528316d0b82bcced3aa17955e71b1b",
+                    "schemaversion": "4.70"
+                  },
+                  "error": "",
+                  "message": "OK"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Manage sysmon configuration"
+        ],
+        "summary": "Add or update a sysmon configuration",
+        "parameters": [
+          {
+            "name": "os",
+            "in": "path",
+            "description": "os path parameter",
+            "required": true,
+            "allowEmptyValue": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "description": "format query parameter",
+            "required": false,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Sysmon configuration file. Raw XML file that you would use to configure Sysmon can be posted here.",
+          "content": {
+            "application/xml": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "Item": {
+                    "type": "object"
+                  }
+                }
+              },
+              "example": {
+                "schemaversion": "4.70",
+                "CheckRevocation": false,
+                "CopyOnDeletePE": false,
+                "DnsLookup": false,
+                "HashAlgorithms": [
+                  "*"
+                ],
+                "EventFiltering": {
+                  "ProcessCreate": {
+                    "onmatch": "exclude"
+                  },
+                  "FileCreateTime": {
+                    "onmatch": "exclude"
+                  },
+                  "NetworkConnect": {
+                    "onmatch": "exclude"
+                  },
+                  "ProcessTerminate": {
+                    "onmatch": "exclude"
+                  },
+                  "DriverLoad": {
+                    "onmatch": "exclude"
+                  },
+                  "CreateRemoteThread": {
+                    "onmatch": "exclude"
+                  },
+                  "RawAccessRead": {
+                    "onmatch": "exclude"
+                  },
+                  "FileCreate": {
+                    "onmatch": "exclude"
+                  },
+                  "FileCreateStreamHash": {
+                    "onmatch": "exclude"
+                  },
+                  "PipeEvent": {
+                    "onmatch": "exclude"
+                  },
+                  "WmiEvent": {
+                    "onmatch": "exclude"
+                  },
+                  "FileDelete": {
+                    "onmatch": "exclude"
+                  },
+                  "ClipboardChange": {
+                    "onmatch": "exclude"
+                  },
+                  "ProcessTampering": {
+                    "onmatch": "exclude"
+                  },
+                  "FileDeleteDetected": {
+                    "onmatch": "exclude"
+                  },
+                  "RuleGroup": [
+                    {
+                      "ImageLoad": {
+                        "onmatch": "exclude",
+                        "Image": [
+                          {
+                            "condition": "is",
+                            "value": "C:\\Windows\\Sysmon.exe"
+                          },
+                          {
+                            "condition": "is",
+                            "value": "C:\\Windows\\Sysmon64.exe"
+                          }
+                        ],
+                        "Signature": [
+                          {
+                            "condition": "is",
+                            "value": "Microsoft Windows Publisher"
+                          },
+                          {
+                            "condition": "is",
+                            "value": "Microsoft Corporation"
+                          },
+                          {
+                            "condition": "is",
+                            "value": "Microsoft Windows"
+                          }
+                        ]
+                      },
+                      "groupRelation": "or"
+                    },
+                    {
+                      "ProcessAccess": {
+                        "onmatch": "exclude",
+                        "SourceImage": [
+                          {
+                            "condition": "is",
+                            "value": "C:\\Windows\\system32\\wbem\\wmiprvse.exe"
+                          },
+                          {
+                            "condition": "is",
+                            "value": "C:\\Windows\\System32\\VBoxService.exe"
+                          },
+                          {
+                            "condition": "is",
+                            "value": "C:\\Windows\\system32\\taskmgr.exe"
+                          }
+                        ],
+                        "GrantedAccess": [
+                          {
+                            "condition": "is",
+                            "value": "0x1000"
+                          },
+                          {
+                            "condition": "is",
+                            "value": "0x2000"
+                          },
+                          {
+                            "condition": "is",
+                            "value": "0x3000"
+                          },
+                          {
+                            "condition": "is",
+                            "value": "0x100000"
+                          },
+                          {
+                            "condition": "is",
+                            "value": "0x101000"
+                          }
+                        ]
+                      },
+                      "groupRelation": "or"
+                    },
+                    {
+                      "RegistryEvent": {
+                        "onmatch": "exclude",
+                        "EventType": [
+                          {
+                            "condition": "is not",
+                            "value": "SetValue"
+                          }
+                        ],
+                        "Image": [
+                          {
+                            "condition": "is",
+                            "value": "C:\\Windows\\Sysmon.exe"
+                          },
+                          {
+                            "condition": "is",
+                            "value": "C:\\Windows\\Sysmon64.exe"
+                          }
+                        ]
+                      },
+                      "groupRelation": "or"
+                    },
+                    {
+                      "DnsQuery": {
+                        "onmatch": "exclude",
+                        "Image": [
+                          {
+                            "condition": "is",
+                            "value": "C:\\Windows\\Sysmon.exe"
+                          },
+                          {
+                            "condition": "is",
+                            "value": "C:\\Windows\\Sysmon64.exe"
+                          }
+                        ]
+                      },
+                      "groupRelation": "or"
+                    }
+                  ]
+                },
+                "XmlSha256": "9a7261a6bb857d35dbc1d9cb810692304a528316d0b82bcced3aa17955e71b1b",
+                "OS": "windows"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "HTTP 200 response",
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": {
+                    "CheckRevocation": false,
+                    "CopyOnDeletePE": false,
+                    "DnsLookup": false,
+                    "EventFiltering": {
+                      "ClipboardChange": {
+                        "onmatch": "exclude"
+                      },
+                      "CreateRemoteThread": {
+                        "onmatch": "exclude"
+                      },
+                      "DriverLoad": {
+                        "onmatch": "exclude"
+                      },
+                      "FileCreate": {
+                        "onmatch": "exclude"
+                      },
+                      "FileCreateStreamHash": {
+                        "onmatch": "exclude"
+                      },
+                      "FileCreateTime": {
+                        "onmatch": "exclude"
+                      },
+                      "FileDelete": {
+                        "onmatch": "exclude"
+                      },
+                      "FileDeleteDetected": {
+                        "onmatch": "exclude"
+                      },
+                      "NetworkConnect": {
+                        "onmatch": "exclude"
+                      },
+                      "PipeEvent": {
+                        "onmatch": "exclude"
+                      },
+                      "ProcessCreate": {
+                        "onmatch": "exclude"
+                      },
+                      "ProcessTampering": {
+                        "onmatch": "exclude"
+                      },
+                      "ProcessTerminate": {
+                        "onmatch": "exclude"
+                      },
+                      "RawAccessRead": {
+                        "onmatch": "exclude"
+                      },
+                      "RuleGroup": [
+                        {
+                          "ImageLoad": {
+                            "Image": [
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\Sysmon.exe"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\Sysmon64.exe"
+                              }
+                            ],
+                            "Signature": [
+                              {
+                                "condition": "is",
+                                "value": "Microsoft Windows Publisher"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "Microsoft Corporation"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "Microsoft Windows"
+                              }
+                            ],
+                            "onmatch": "exclude"
+                          },
+                          "groupRelation": "or"
+                        },
+                        {
+                          "ProcessAccess": {
+                            "GrantedAccess": [
+                              {
+                                "condition": "is",
+                                "value": "0x1000"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "0x2000"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "0x3000"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "0x100000"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "0x101000"
+                              }
+                            ],
+                            "SourceImage": [
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\system32\\wbem\\wmiprvse.exe"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\System32\\VBoxService.exe"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\system32\\taskmgr.exe"
+                              }
+                            ],
+                            "onmatch": "exclude"
+                          },
+                          "groupRelation": "or"
+                        },
+                        {
+                          "RegistryEvent": {
+                            "EventType": [
+                              {
+                                "condition": "is not",
+                                "value": "SetValue"
+                              }
+                            ],
+                            "Image": [
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\Sysmon.exe"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\Sysmon64.exe"
+                              }
+                            ],
+                            "onmatch": "exclude"
+                          },
+                          "groupRelation": "or"
+                        },
+                        {
+                          "DnsQuery": {
+                            "Image": [
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\Sysmon.exe"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\Sysmon64.exe"
+                              }
+                            ],
+                            "onmatch": "exclude"
+                          },
+                          "groupRelation": "or"
+                        }
+                      ],
+                      "WmiEvent": {
+                        "onmatch": "exclude"
+                      }
+                    },
+                    "HashAlgorithms": [
+                      "*"
+                    ],
+                    "OS": "windows",
+                    "XmlSha256": "9a7261a6bb857d35dbc1d9cb810692304a528316d0b82bcced3aa17955e71b1b",
+                    "schemaversion": "4.70"
+                  },
+                  "error": "",
+                  "message": "OK"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Manage sysmon configuration"
+        ],
+        "summary": "Delete a sysmon configuration",
+        "parameters": [
+          {
+            "name": "os",
+            "in": "path",
+            "description": "os path parameter",
+            "required": true,
+            "allowEmptyValue": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "description": "version query parameter",
+            "required": true,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTTP 200 response",
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": {
+                    "CheckRevocation": false,
+                    "CopyOnDeletePE": false,
+                    "DnsLookup": false,
+                    "EventFiltering": {
+                      "ClipboardChange": {
+                        "onmatch": "exclude"
+                      },
+                      "CreateRemoteThread": {
+                        "onmatch": "exclude"
+                      },
+                      "DriverLoad": {
+                        "onmatch": "exclude"
+                      },
+                      "FileCreate": {
+                        "onmatch": "exclude"
+                      },
+                      "FileCreateStreamHash": {
+                        "onmatch": "exclude"
+                      },
+                      "FileCreateTime": {
+                        "onmatch": "exclude"
+                      },
+                      "FileDelete": {
+                        "onmatch": "exclude"
+                      },
+                      "FileDeleteDetected": {
+                        "onmatch": "exclude"
+                      },
+                      "NetworkConnect": {
+                        "onmatch": "exclude"
+                      },
+                      "PipeEvent": {
+                        "onmatch": "exclude"
+                      },
+                      "ProcessCreate": {
+                        "onmatch": "exclude"
+                      },
+                      "ProcessTampering": {
+                        "onmatch": "exclude"
+                      },
+                      "ProcessTerminate": {
+                        "onmatch": "exclude"
+                      },
+                      "RawAccessRead": {
+                        "onmatch": "exclude"
+                      },
+                      "RuleGroup": [
+                        {
+                          "ImageLoad": {
+                            "Image": [
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\Sysmon.exe"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\Sysmon64.exe"
+                              }
+                            ],
+                            "Signature": [
+                              {
+                                "condition": "is",
+                                "value": "Microsoft Windows Publisher"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "Microsoft Corporation"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "Microsoft Windows"
+                              }
+                            ],
+                            "onmatch": "exclude"
+                          },
+                          "groupRelation": "or"
+                        },
+                        {
+                          "ProcessAccess": {
+                            "GrantedAccess": [
+                              {
+                                "condition": "is",
+                                "value": "0x1000"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "0x2000"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "0x3000"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "0x100000"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "0x101000"
+                              }
+                            ],
+                            "SourceImage": [
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\system32\\wbem\\wmiprvse.exe"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\System32\\VBoxService.exe"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\system32\\taskmgr.exe"
+                              }
+                            ],
+                            "onmatch": "exclude"
+                          },
+                          "groupRelation": "or"
+                        },
+                        {
+                          "RegistryEvent": {
+                            "EventType": [
+                              {
+                                "condition": "is not",
+                                "value": "SetValue"
+                              }
+                            ],
+                            "Image": [
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\Sysmon.exe"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\Sysmon64.exe"
+                              }
+                            ],
+                            "onmatch": "exclude"
+                          },
+                          "groupRelation": "or"
+                        },
+                        {
+                          "DnsQuery": {
+                            "Image": [
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\Sysmon.exe"
+                              },
+                              {
+                                "condition": "is",
+                                "value": "C:\\Windows\\Sysmon64.exe"
+                              }
+                            ],
+                            "onmatch": "exclude"
+                          },
+                          "groupRelation": "or"
+                        }
+                      ],
+                      "WmiEvent": {
+                        "onmatch": "exclude"
+                      }
+                    },
+                    "HashAlgorithms": [
+                      "*"
+                    ],
+                    "OS": "windows",
+                    "XmlSha256": "9a7261a6bb857d35dbc1d9cb810692304a528316d0b82bcced3aa17955e71b1b",
+                    "schemaversion": "4.70"
                   },
                   "error": "",
                   "message": "OK"
@@ -273,10 +1150,52 @@ var OpenAPIDefinition = `
                     "group": "",
                     "hostname": "OpenHappy",
                     "ip": "127.0.0.1",
-                    "last-connection": "2021-12-10T14:57:53.736740431Z",
-                    "last-detection": "2021-12-10T15:57:52.656748907+01:00",
-                    "score": 100,
+                    "last-connection": "2022-03-04T13:20:12.009372983Z",
+                    "last-detection": "2022-03-04T14:20:10.935434116+01:00",
+                    "score": 0,
                     "status": "",
+                    "system-info": {
+                      "bios": {
+                        "date": "12/01/2006",
+                        "version": "VirtualBox"
+                      },
+                      "cpu": {
+                        "count": 4,
+                        "name": "Intel(R) Core(TM) i7-8565U CPU @ 1.80GHz"
+                      },
+                      "os": {
+                        "build": "18362",
+                        "edition": "Enterprise",
+                        "name": "windows",
+                        "product": "Windows 10 Pro",
+                        "version": "10.0.18362"
+                      },
+                      "sysmon": {
+                        "config": {
+                          "hash": "2d1652d67b565cabf2e774668f2598188373e957ef06aa5653bf9bf6fe7fe837",
+                          "version": {
+                            "binary": "15.0",
+                            "schema": "4.70"
+                          }
+                        },
+                        "driver": {
+                          "image": "C:\\Windows\\SysmonDrv.sys",
+                          "name": "SysmonDrv",
+                          "sha256": "e9ea8c0390c65c055d795b301ee50de8f8884313530023918c2eea56de37a525"
+                        },
+                        "service": {
+                          "image": "C:\\Program Files\\Whids\\Sysmon64.exe",
+                          "name": "Sysmon64",
+                          "sha256": "b448cd80b09fa43a3848f5181362ac52ffcb283f88693b68f1a0e4e6ae932863"
+                        },
+                        "version": "v13.23"
+                      },
+                      "system": {
+                        "manufacturer": "innotek GmbH",
+                        "name": "VirtualBox",
+                        "virtual": true
+                      }
+                    },
                     "uuid": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d"
                   },
                   "error": "",
@@ -459,6 +1378,126 @@ var OpenAPIDefinition = `
                   "status": {
                     "type": "string"
                   },
+                  "system-info": {
+                    "type": "object",
+                    "properties": {
+                      "bios": {
+                        "type": "object",
+                        "properties": {
+                          "date": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "cpu": {
+                        "type": "object",
+                        "properties": {
+                          "count": {
+                            "type": "integer",
+                            "format": "int64"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "os": {
+                        "type": "object",
+                        "properties": {
+                          "build": {
+                            "type": "string"
+                          },
+                          "edition": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "product": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "sysmon": {
+                        "type": "object",
+                        "properties": {
+                          "config": {
+                            "type": "object",
+                            "properties": {
+                              "hash": {
+                                "type": "string"
+                              },
+                              "version": {
+                                "type": "object",
+                                "properties": {
+                                  "binary": {
+                                    "type": "string"
+                                  },
+                                  "schema": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "driver": {
+                            "type": "object",
+                            "properties": {
+                              "image": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "sha256": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "error": {
+                            "type": "object"
+                          },
+                          "service": {
+                            "type": "object",
+                            "properties": {
+                              "image": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "sha256": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "version": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "system": {
+                        "type": "object",
+                        "properties": {
+                          "manufacturer": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "virtual": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    }
+                  },
                   "uuid": {
                     "type": "string"
                   }
@@ -491,10 +1530,52 @@ var OpenAPIDefinition = `
                     "group": "New Group",
                     "hostname": "OpenHappy",
                     "ip": "127.0.0.1",
-                    "last-connection": "2021-12-10T14:57:53.736740431Z",
-                    "last-detection": "2021-12-10T15:57:52.656748907+01:00",
-                    "score": 100,
+                    "last-connection": "2022-03-04T13:20:12.009372983Z",
+                    "last-detection": "2022-03-04T14:20:10.935434116+01:00",
+                    "score": 0,
                     "status": "New Status",
+                    "system-info": {
+                      "bios": {
+                        "date": "12/01/2006",
+                        "version": "VirtualBox"
+                      },
+                      "cpu": {
+                        "count": 4,
+                        "name": "Intel(R) Core(TM) i7-8565U CPU @ 1.80GHz"
+                      },
+                      "os": {
+                        "build": "18362",
+                        "edition": "Enterprise",
+                        "name": "windows",
+                        "product": "Windows 10 Pro",
+                        "version": "10.0.18362"
+                      },
+                      "sysmon": {
+                        "config": {
+                          "hash": "2d1652d67b565cabf2e774668f2598188373e957ef06aa5653bf9bf6fe7fe837",
+                          "version": {
+                            "binary": "15.0",
+                            "schema": "4.70"
+                          }
+                        },
+                        "driver": {
+                          "image": "C:\\Windows\\SysmonDrv.sys",
+                          "name": "SysmonDrv",
+                          "sha256": "e9ea8c0390c65c055d795b301ee50de8f8884313530023918c2eea56de37a525"
+                        },
+                        "service": {
+                          "image": "C:\\Program Files\\Whids\\Sysmon64.exe",
+                          "name": "Sysmon64",
+                          "sha256": "b448cd80b09fa43a3848f5181362ac52ffcb283f88693b68f1a0e4e6ae932863"
+                        },
+                        "version": "v13.23"
+                      },
+                      "system": {
+                        "manufacturer": "innotek GmbH",
+                        "name": "VirtualBox",
+                        "virtual": true
+                      }
+                    },
                     "uuid": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d"
                   },
                   "error": "",
@@ -533,10 +1614,52 @@ var OpenAPIDefinition = `
                     "group": "New Group",
                     "hostname": "OpenHappy",
                     "ip": "127.0.0.1",
-                    "last-connection": "2021-12-10T14:57:53.736740431Z",
-                    "last-detection": "2021-12-10T15:57:52.656748907+01:00",
-                    "score": 100,
+                    "last-connection": "2022-03-04T13:20:12.009372983Z",
+                    "last-detection": "2022-03-04T14:20:10.935434116+01:00",
+                    "score": 0,
                     "status": "New Status",
+                    "system-info": {
+                      "bios": {
+                        "date": "12/01/2006",
+                        "version": "VirtualBox"
+                      },
+                      "cpu": {
+                        "count": 4,
+                        "name": "Intel(R) Core(TM) i7-8565U CPU @ 1.80GHz"
+                      },
+                      "os": {
+                        "build": "18362",
+                        "edition": "Enterprise",
+                        "name": "windows",
+                        "product": "Windows 10 Pro",
+                        "version": "10.0.18362"
+                      },
+                      "sysmon": {
+                        "config": {
+                          "hash": "2d1652d67b565cabf2e774668f2598188373e957ef06aa5653bf9bf6fe7fe837",
+                          "version": {
+                            "binary": "15.0",
+                            "schema": "4.70"
+                          }
+                        },
+                        "driver": {
+                          "image": "C:\\Windows\\SysmonDrv.sys",
+                          "name": "SysmonDrv",
+                          "sha256": "e9ea8c0390c65c055d795b301ee50de8f8884313530023918c2eea56de37a525"
+                        },
+                        "service": {
+                          "image": "C:\\Program Files\\Whids\\Sysmon64.exe",
+                          "name": "Sysmon64",
+                          "sha256": "b448cd80b09fa43a3848f5181362ac52ffcb283f88693b68f1a0e4e6ae932863"
+                        },
+                        "version": "v13.23"
+                      },
+                      "system": {
+                        "manufacturer": "innotek GmbH",
+                        "name": "VirtualBox",
+                        "virtual": true
+                      }
+                    },
                     "uuid": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d"
                   },
                   "error": "",
@@ -586,21 +1709,21 @@ var OpenAPIDefinition = `
                   "data": [
                     {
                       "base-url": "/endpoints/5a92baeb-9384-47d3-92b4-a0db6f9b8c6d/artifacts/5a92baeb-9384-47d3-92b4-a0db6f9b8c6d/3d8441643c204ba9b9dcb5c414b25a3129f66f6c/",
-                      "creation": "2021-12-10T14:57:58.297934684Z",
+                      "creation": "2022-03-04T13:20:15.421761012Z",
                       "event-hash": "3d8441643c204ba9b9dcb5c414b25a3129f66f6c",
                       "files": [
                         {
                           "name": "bar.txt",
                           "size": 4,
-                          "timestamp": "2021-12-10T14:57:58.307934683Z"
+                          "timestamp": "2022-03-04T13:20:15.43509437Z"
                         },
                         {
                           "name": "foo.txt",
                           "size": 4,
-                          "timestamp": "2021-12-10T14:57:58.297934684Z"
+                          "timestamp": "2022-03-04T13:20:15.421761012Z"
                         }
                       ],
-                      "modification": "2021-12-10T14:57:58.307934683Z",
+                      "modification": "2022-03-04T13:20:15.43509437Z",
                       "process-guid": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d"
                     }
                   ],
@@ -745,11 +1868,11 @@ var OpenAPIDefinition = `
                     "json": null,
                     "name": "/usr/bin/printf",
                     "sent": true,
-                    "sent-time": "2021-12-10T15:57:54.859940667+01:00",
+                    "sent-time": "2022-03-04T14:20:13.131214991+01:00",
                     "stderr": null,
                     "stdout": "SGVsbG8gV29ybGQ=",
                     "timeout": 0,
-                    "uuid": "f8a7dbe6-f19b-21a7-84ca-a9d5e35beff1"
+                    "uuid": "298cac85-c3a2-3462-1c8e-776ce9faff8a"
                   },
                   "error": "",
                   "message": "OK"
@@ -837,17 +1960,59 @@ var OpenAPIDefinition = `
                       "stderr": null,
                       "stdout": null,
                       "timeout": 0,
-                      "uuid": "f8a7dbe6-f19b-21a7-84ca-a9d5e35beff1"
+                      "uuid": "298cac85-c3a2-3462-1c8e-776ce9faff8a"
                     },
                     "criticality": 0,
                     "group": "",
                     "hostname": "OpenHappy",
                     "ip": "127.0.0.1",
-                    "key": "3Ha7K2Nu0FeYhgSwmMFuE5zsoyofYLJLpmhYReSLvaL5JIxRu2pHeNsx9dDlMojJ",
-                    "last-connection": "2021-12-10T14:57:54.850227052Z",
-                    "last-detection": "2021-12-10T15:57:53.78271092+01:00",
+                    "key": "x72LGV0LJu6wSrOFescJzifFz0i1s1cRyVU77a5gIRvLyVjRCJ4LKlfSb75ReXgb",
+                    "last-connection": "2022-03-04T13:20:13.119733597Z",
+                    "last-detection": "2022-03-04T14:20:12.069336163+01:00",
                     "score": 0,
                     "status": "",
+                    "system-info": {
+                      "bios": {
+                        "date": "12/01/2006",
+                        "version": "VirtualBox"
+                      },
+                      "cpu": {
+                        "count": 4,
+                        "name": "Intel(R) Core(TM) i7-8565U CPU @ 1.80GHz"
+                      },
+                      "os": {
+                        "build": "18362",
+                        "edition": "Enterprise",
+                        "name": "windows",
+                        "product": "Windows 10 Pro",
+                        "version": "10.0.18362"
+                      },
+                      "sysmon": {
+                        "config": {
+                          "hash": "2d1652d67b565cabf2e774668f2598188373e957ef06aa5653bf9bf6fe7fe837",
+                          "version": {
+                            "binary": "15.0",
+                            "schema": "4.70"
+                          }
+                        },
+                        "driver": {
+                          "image": "C:\\Windows\\SysmonDrv.sys",
+                          "name": "SysmonDrv",
+                          "sha256": "e9ea8c0390c65c055d795b301ee50de8f8884313530023918c2eea56de37a525"
+                        },
+                        "service": {
+                          "image": "C:\\Program Files\\Whids\\Sysmon64.exe",
+                          "name": "Sysmon64",
+                          "sha256": "b448cd80b09fa43a3848f5181362ac52ffcb283f88693b68f1a0e4e6ae932863"
+                        },
+                        "version": "v13.23"
+                      },
+                      "system": {
+                        "manufacturer": "innotek GmbH",
+                        "name": "VirtualBox",
+                        "virtual": true
+                      }
+                    },
                     "uuid": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d"
                   },
                   "error": "",
@@ -1017,82 +2182,6 @@ var OpenAPIDefinition = `
                       "Event": {
                         "Detection": {
                           "Actions": [],
-                          "Criticality": 8,
-                          "Signature": [
-                            "NewAutorun"
-                          ]
-                        },
-                        "EdrData": {
-                          "Endpoint": {
-                            "Group": "",
-                            "Hostname": "OpenHappy",
-                            "IP": "127.0.0.1",
-                            "UUID": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d"
-                          },
-                          "Event": {
-                            "Detection": true,
-                            "Hash": "1f35f33c6bad78f55b3dcbdff8c996cf0200732f",
-                            "ReceiptTime": "2021-12-10T14:57:52.549454322Z"
-                          }
-                        },
-                        "EventData": {
-                          "CommandLine": "\"C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.2106.6-0\\MsMpEng.exe\"",
-                          "CurrentDirectory": "C:\\Windows\\system32\\",
-                          "Details": "MpUx User Session Agent",
-                          "EventType": "SetValue",
-                          "Image": "C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.2106.6-0\\MsMpEng.exe",
-                          "ImageHashes": "SHA1=FBF03B5D6DC1A7EDAB0BA8D4DD27291C739E5813,MD5=B1C15F9DB942B373B2FC468B7048E63F,SHA256=1DC05B6DD6281840CEB822604B0E403E499180D636D02EC08AD77B4EB56F1B9C,IMPHASH=8AA2B8727E6858A3557A4C09970B9A5D",
-                          "ImageSignature": "?",
-                          "ImageSignatureStatus": "?",
-                          "ImageSigned": "false",
-                          "IntegrityLevel": "System",
-                          "ProcessGuid": "{515cd0d1-7669-6123-4e00-000000007300}",
-                          "ProcessId": "3276",
-                          "ProcessThreatScore": "0",
-                          "RuleName": "-",
-                          "Services": "WinDefend",
-                          "TargetObject": "HKCR\\CLSID\\{2DCD7FDB-8809-48E4-8E4F-3157C57CF987}\\(Default)",
-                          "User": "NT AUTHORITY\\SYSTEM",
-                          "UtcTime": "2021-08-23 10:20:25.878"
-                        },
-                        "System": {
-                          "Channel": "Microsoft-Windows-Sysmon/Operational",
-                          "Computer": "DESKTOP-LJRVE06",
-                          "EventID": 13,
-                          "Execution": {
-                            "ProcessID": 3220,
-                            "ThreadID": 3848
-                          },
-                          "Keywords": {
-                            "Name": "",
-                            "Value": 9223372036854776000
-                          },
-                          "Level": {
-                            "Name": "Information",
-                            "Value": 4
-                          },
-                          "Opcode": {
-                            "Name": "Info",
-                            "Value": 0
-                          },
-                          "Provider": {
-                            "Guid": "{5770385F-C22A-43E0-BF4C-06F5698FFBD9}",
-                            "Name": "Microsoft-Windows-Sysmon"
-                          },
-                          "Task": {
-                            "Name": "",
-                            "Value": 0
-                          },
-                          "TimeCreated": {
-                            "SystemTime": "2021-12-10T15:57:51.504663044+01:00"
-                          }
-                        }
-                      }
-                    },
-                    {
-                      "Event": {
-                        "Detection": {
-                          "Actions": [],
                           "Criticality": 10,
                           "Signature": [
                             "UntrustedDriverLoaded"
@@ -1107,19 +2196,19 @@ var OpenAPIDefinition = `
                           },
                           "Event": {
                             "Detection": true,
-                            "Hash": "818c3e3a14da48f8217cc4a504e5caaf3acbb7ff",
-                            "ReceiptTime": "2021-12-10T14:57:52.552412347Z"
+                            "Hash": "f44561509cbfad21d43a3d6f927a1e1d470230d0",
+                            "ReceiptTime": "2022-03-04T13:20:10.868957325Z"
                           }
                         },
                         "EventData": {
-                          "Hashes": "SHA1=11F6CFF4F8BAD13D982ABF21BC0E33F95A97DE82,MD5=4CD8560661E3695EEF104A280D4AB656,SHA256=77DA29156BC9536400CB7ADB742A5C331D7EACC93EA806D1C03E9D0FC8DAFA54,IMPHASH=1C4067E1C451E614D2A5000171502DD1",
-                          "ImageLoaded": "C:\\Windows\\System32\\drivers\\VBoxSF.sys",
-                          "ImageLoadedSize": "348104",
+                          "Hashes": "SHA1=4777B847E66E26D07CAB85361A93F6B9A1DF3E21,MD5=24A56CB3ECB97815A01514B2876A4417,SHA256=7906DCF8E5CCC7D8C0C3DA61785DE448DF554B0D0CF81BFD34DF9DEAF8962F64,IMPHASH=722ECECC50D0D02124BAB0A56989296C",
+                          "ImageLoaded": "C:\\Windows\\System32\\drivers\\VBoxWddm.sys",
+                          "ImageLoadedSize": "404296",
                           "RuleName": "-",
                           "Signature": "Oracle Corporation",
                           "SignatureStatus": "Valid",
                           "Signed": "true",
-                          "UtcTime": "2021-08-23 10:20:18.704"
+                          "UtcTime": "2021-08-23 10:20:18.876"
                         },
                         "System": {
                           "Channel": "Microsoft-Windows-Sysmon/Operational",
@@ -1150,7 +2239,73 @@ var OpenAPIDefinition = `
                             "Value": 0
                           },
                           "TimeCreated": {
-                            "SystemTime": "2021-12-10T15:57:51.505063518+01:00"
+                            "SystemTime": "2022-03-04T14:20:09.815018806+01:00"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "Event": {
+                        "Detection": {
+                          "Actions": [],
+                          "Criticality": 10,
+                          "Signature": [
+                            "UntrustedDriverLoaded"
+                          ]
+                        },
+                        "EdrData": {
+                          "Endpoint": {
+                            "Group": "",
+                            "Hostname": "OpenHappy",
+                            "IP": "127.0.0.1",
+                            "UUID": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d"
+                          },
+                          "Event": {
+                            "Detection": true,
+                            "Hash": "e333008549a189dd491990147dd749d436e0532e",
+                            "ReceiptTime": "2022-03-04T13:20:10.869393733Z"
+                          }
+                        },
+                        "EventData": {
+                          "Hashes": "SHA1=E9AC7F28883867C91CD940E6F2EC6E98AA2197AF,MD5=1E683E20DDD61ECBDD0D046DB7FB6027,SHA256=374FF85925CBDD75D64180E7D2B20A13F6EF2ABD248E6CB7D4FF2B7A42DBE5C8,IMPHASH=D6B88475B1759078DD0B119777B66A37",
+                          "ImageLoaded": "C:\\Windows\\System32\\drivers\\VBoxMouse.sys",
+                          "ImageLoadedSize": "186528",
+                          "RuleName": "-",
+                          "Signature": "Oracle Corporation",
+                          "SignatureStatus": "Valid",
+                          "Signed": "true",
+                          "UtcTime": "2021-08-23 10:20:18.860"
+                        },
+                        "System": {
+                          "Channel": "Microsoft-Windows-Sysmon/Operational",
+                          "Computer": "DESKTOP-LJRVE06",
+                          "EventID": 6,
+                          "Execution": {
+                            "ProcessID": 3220,
+                            "ThreadID": 3584
+                          },
+                          "Keywords": {
+                            "Name": "",
+                            "Value": 9223372036854776000
+                          },
+                          "Level": {
+                            "Name": "Information",
+                            "Value": 4
+                          },
+                          "Opcode": {
+                            "Name": "Info",
+                            "Value": 0
+                          },
+                          "Provider": {
+                            "Guid": "{5770385F-C22A-43E0-BF4C-06F5698FFBD9}",
+                            "Name": "Microsoft-Windows-Sysmon"
+                          },
+                          "Task": {
+                            "Name": "",
+                            "Value": 0
+                          },
+                          "TimeCreated": {
+                            "SystemTime": "2022-03-04T14:20:09.815088808+01:00"
                           }
                         }
                       }
@@ -1276,14 +2431,14 @@ var OpenAPIDefinition = `
                           },
                           "Event": {
                             "Detection": false,
-                            "Hash": "5dd545744f01f3c7f569a8f69555bc31c7a6c315",
-                            "ReceiptTime": "2021-12-10T14:57:52.542027486Z"
+                            "Hash": "05c8551fbea040aed5f844d1a5c1f383523f720e",
+                            "ReceiptTime": "2022-03-04T13:20:10.862574242Z"
                           }
                         },
                         "EventData": {
                           "CommandLine": "C:\\Windows\\system32\\svchost.exe -k appmodel -p -s StateRepository",
                           "CurrentDirectory": "C:\\Windows\\system32\\",
-                          "Details": "Binary Data",
+                          "Details": "windows.appService",
                           "EventType": "SetValue",
                           "Image": "C:\\Windows\\system32\\svchost.exe",
                           "ImageHashes": "SHA1=75C5A97F521F760E32A4A9639A653EED862E9C61,MD5=9520A99E77D6196D0D09833146424113,SHA256=DD191A5B23DF92E12A8852291F9FB5ED594B76A28A5A464418442584AFD1E048,IMPHASH=247B9220E5D9B720A82B2C8B5069AD69",
@@ -1296,9 +2451,9 @@ var OpenAPIDefinition = `
                           "ProcessThreatScore": "0",
                           "RuleName": "-",
                           "Services": "StateRepository",
-                          "TargetObject": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AppModel\\StateRepository\\Cache\\PackageUser\\Data\\508\\_IndexKeys",
+                          "TargetObject": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AppModel\\StateRepository\\Cache\\ApplicationExtension\\Data\\1a\\Category",
                           "User": "NT AUTHORITY\\SYSTEM",
-                          "UtcTime": "2021-08-23 10:20:30.426"
+                          "UtcTime": "2021-08-23 10:20:30.565"
                         },
                         "System": {
                           "Channel": "Microsoft-Windows-Sysmon/Operational",
@@ -1329,7 +2484,7 @@ var OpenAPIDefinition = `
                             "Value": 0
                           },
                           "TimeCreated": {
-                            "SystemTime": "2021-12-10T15:57:51.50423957+01:00"
+                            "SystemTime": "2022-03-04T14:20:09.813924283+01:00"
                           }
                         }
                       }
@@ -1345,34 +2500,32 @@ var OpenAPIDefinition = `
                           },
                           "Event": {
                             "Detection": false,
-                            "Hash": "1f2e4a47acafcf98797c641bcb3b0af68dc006cc",
-                            "ReceiptTime": "2021-12-10T14:57:52.545843Z"
+                            "Hash": "4ea167d57b31dcfaee2b1ff1db198a7713f85e55",
+                            "ReceiptTime": "2022-03-04T13:20:10.863040179Z"
                           }
                         },
                         "EventData": {
-                          "CommandLine": "\"C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.2106.6-0\\MsMpEng.exe\"",
+                          "CommandLine": "C:\\Windows\\System32\\svchost.exe -k utcsvc -p",
                           "CurrentDirectory": "C:\\Windows\\system32\\",
-                          "Details": "IMpUxUserSessionAgent",
-                          "EventType": "SetValue",
-                          "Image": "C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.2106.6-0\\MsMpEng.exe",
-                          "ImageHashes": "SHA1=FBF03B5D6DC1A7EDAB0BA8D4DD27291C739E5813,MD5=B1C15F9DB942B373B2FC468B7048E63F,SHA256=1DC05B6DD6281840CEB822604B0E403E499180D636D02EC08AD77B4EB56F1B9C,IMPHASH=8AA2B8727E6858A3557A4C09970B9A5D",
+                          "Device": "\\Device\\HarddiskVolume2",
+                          "Image": "C:\\Windows\\System32\\svchost.exe",
+                          "ImageHashes": "SHA1=75C5A97F521F760E32A4A9639A653EED862E9C61,MD5=9520A99E77D6196D0D09833146424113,SHA256=DD191A5B23DF92E12A8852291F9FB5ED594B76A28A5A464418442584AFD1E048,IMPHASH=247B9220E5D9B720A82B2C8B5069AD69",
                           "ImageSignature": "?",
                           "ImageSignatureStatus": "?",
                           "ImageSigned": "false",
                           "IntegrityLevel": "System",
-                          "ProcessGuid": "{515cd0d1-7669-6123-4e00-000000007300}",
-                          "ProcessId": "3276",
-                          "ProcessThreatScore": "56",
+                          "ProcessGuid": "{515cd0d1-7669-6123-4500-000000007300}",
+                          "ProcessId": "2364",
+                          "ProcessThreatScore": "0",
                           "RuleName": "-",
-                          "Services": "WinDefend",
-                          "TargetObject": "HKCR\\Interface\\{5A776536-75B3-4A16-9AAF-B2E61395209B}\\(Default)",
+                          "Services": "DiagTrack",
                           "User": "NT AUTHORITY\\SYSTEM",
-                          "UtcTime": "2021-08-23 10:20:25.878"
+                          "UtcTime": "2021-08-23 10:20:25.956"
                         },
                         "System": {
                           "Channel": "Microsoft-Windows-Sysmon/Operational",
                           "Computer": "DESKTOP-LJRVE06",
-                          "EventID": 13,
+                          "EventID": 9,
                           "Execution": {
                             "ProcessID": 3220,
                             "ThreadID": 3848
@@ -1398,7 +2551,7 @@ var OpenAPIDefinition = `
                             "Value": 0
                           },
                           "TimeCreated": {
-                            "SystemTime": "2021-12-10T15:57:51.504240123+01:00"
+                            "SystemTime": "2022-03-04T14:20:09.813924951+01:00"
                           }
                         }
                       }
@@ -1439,45 +2592,39 @@ var OpenAPIDefinition = `
                 "example": {
                   "data": {
                     "alert-count": 50,
-                    "alert-criticality-metric": 864,
-                    "avg-alert-criticality": 8.64,
-                    "avg-signature-criticality": 8.64,
-                    "bounded-score": 100,
+                    "alert-criticality-metric": 0,
+                    "avg-alert-criticality": 0,
+                    "avg-signature-criticality": 0,
+                    "bounded-score": 0,
                     "count-by-signature": {
-                      "DefenderConfigChanged": 2,
-                      "NewAutorun": 11,
-                      "SuspiciousService": 7,
-                      "UnknownServices": 13,
-                      "UntrustedDriverLoaded": 17
+                      "DefenderConfigChanged": 3,
+                      "NewAutorun": 17,
+                      "SuspiciousService": 4,
+                      "UnknownServices": 8,
+                      "UntrustedDriverLoaded": 18
                     },
                     "count-uniq-signatures": 5,
                     "identifier": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d",
-                    "median-time": "2021-12-10T15:57:54.940294227+01:00",
-                    "score": 909,
+                    "median-time": "2022-03-04T14:20:13.218428238+01:00",
+                    "score": 0,
                     "signature-count": 50,
-                    "signature-criticality-metric": 45,
+                    "signature-criticality-metric": 0,
                     "signature-diversity": 100,
                     "signatures": [
+                      "SuspiciousService",
                       "UnknownServices",
                       "UntrustedDriverLoaded",
                       "NewAutorun",
-                      "SuspiciousService",
                       "DefenderConfigChanged"
                     ],
-                    "start-time": "2021-12-10T15:57:54.939026336+01:00",
-                    "std-dev-alert-criticality": 2.05,
-                    "std-dev-signature-criticality": 2.05,
-                    "stop-time": "2021-12-10T15:57:54.941562119+01:00",
-                    "sum-alert-criticality": 432,
-                    "sum-rule-criticality": 432,
-                    "tactics": [
-                      "Defense Evasion",
-                      "persistence"
-                    ],
-                    "techniques": [
-                      "T1014",
-                      "T1060"
-                    ]
+                    "start-time": "2022-03-04T14:20:13.216631809+01:00",
+                    "std-dev-alert-criticality": 0,
+                    "std-dev-signature-criticality": -92233720368547760,
+                    "stop-time": "2022-03-04T14:20:13.220224668+01:00",
+                    "sum-alert-criticality": 0,
+                    "sum-rule-criticality": 0,
+                    "tactics": null,
+                    "techniques": null
                   },
                   "error": "",
                   "message": "OK"
@@ -1512,45 +2659,39 @@ var OpenAPIDefinition = `
                 "example": {
                   "data": {
                     "alert-count": 50,
-                    "alert-criticality-metric": 864,
-                    "avg-alert-criticality": 8.64,
-                    "avg-signature-criticality": 8.64,
-                    "bounded-score": 100,
+                    "alert-criticality-metric": 0,
+                    "avg-alert-criticality": 0,
+                    "avg-signature-criticality": 0,
+                    "bounded-score": 0,
                     "count-by-signature": {
-                      "DefenderConfigChanged": 2,
-                      "NewAutorun": 11,
-                      "SuspiciousService": 7,
-                      "UnknownServices": 13,
-                      "UntrustedDriverLoaded": 17
+                      "DefenderConfigChanged": 3,
+                      "NewAutorun": 17,
+                      "SuspiciousService": 4,
+                      "UnknownServices": 8,
+                      "UntrustedDriverLoaded": 18
                     },
                     "count-uniq-signatures": 5,
                     "identifier": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d",
-                    "median-time": "2021-12-10T15:57:54.940294227+01:00",
-                    "score": 909,
+                    "median-time": "2022-03-04T14:20:13.218428238+01:00",
+                    "score": 0,
                     "signature-count": 50,
-                    "signature-criticality-metric": 45,
+                    "signature-criticality-metric": 0,
                     "signature-diversity": 100,
                     "signatures": [
+                      "UntrustedDriverLoaded",
                       "NewAutorun",
-                      "SuspiciousService",
                       "DefenderConfigChanged",
-                      "UnknownServices",
-                      "UntrustedDriverLoaded"
+                      "SuspiciousService",
+                      "UnknownServices"
                     ],
-                    "start-time": "2021-12-10T15:57:54.939026336+01:00",
-                    "std-dev-alert-criticality": 2.05,
-                    "std-dev-signature-criticality": 2.05,
-                    "stop-time": "2021-12-10T15:57:54.941562119+01:00",
-                    "sum-alert-criticality": 432,
-                    "sum-rule-criticality": 432,
-                    "tactics": [
-                      "Defense Evasion",
-                      "persistence"
-                    ],
-                    "techniques": [
-                      "T1014",
-                      "T1060"
-                    ]
+                    "start-time": "2022-03-04T14:20:13.216631809+01:00",
+                    "std-dev-alert-criticality": 0,
+                    "std-dev-signature-criticality": -92233720368547760,
+                    "stop-time": "2022-03-04T14:20:13.220224668+01:00",
+                    "sum-alert-criticality": 0,
+                    "sum-rule-criticality": 0,
+                    "tactics": null,
+                    "techniques": null
                   },
                   "error": "",
                   "message": "OK"
@@ -1631,46 +2772,40 @@ var OpenAPIDefinition = `
                   "data": [
                     {
                       "alert-count": 50,
-                      "alert-criticality-metric": 864,
-                      "archived-time": "2021-12-10T15:57:56.054016846+01:00",
-                      "avg-alert-criticality": 8.64,
-                      "avg-signature-criticality": 8.64,
-                      "bounded-score": 100,
+                      "alert-criticality-metric": 0,
+                      "archived-time": "2022-03-04T14:20:14.287975813+01:00",
+                      "avg-alert-criticality": 0,
+                      "avg-signature-criticality": 0,
+                      "bounded-score": 0,
                       "count-by-signature": {
-                        "DefenderConfigChanged": 2,
-                        "NewAutorun": 11,
-                        "SuspiciousService": 7,
-                        "UnknownServices": 13,
-                        "UntrustedDriverLoaded": 17
+                        "DefenderConfigChanged": 3,
+                        "NewAutorun": 17,
+                        "SuspiciousService": 4,
+                        "UnknownServices": 8,
+                        "UntrustedDriverLoaded": 18
                       },
                       "count-uniq-signatures": 5,
                       "identifier": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d",
-                      "median-time": "2021-12-10T15:57:54.940294227+01:00",
-                      "score": 909,
+                      "median-time": "2022-03-04T14:20:13.218428238+01:00",
+                      "score": 0,
                       "signature-count": 50,
-                      "signature-criticality-metric": 45,
+                      "signature-criticality-metric": 0,
                       "signature-diversity": 100,
                       "signatures": [
+                        "UntrustedDriverLoaded",
                         "NewAutorun",
-                        "SuspiciousService",
                         "DefenderConfigChanged",
-                        "UnknownServices",
-                        "UntrustedDriverLoaded"
+                        "SuspiciousService",
+                        "UnknownServices"
                       ],
-                      "start-time": "2021-12-10T15:57:54.939026336+01:00",
-                      "std-dev-alert-criticality": 2.05,
-                      "std-dev-signature-criticality": 2.05,
-                      "stop-time": "2021-12-10T15:57:54.941562119+01:00",
-                      "sum-alert-criticality": 432,
-                      "sum-rule-criticality": 432,
-                      "tactics": [
-                        "Defense Evasion",
-                        "persistence"
-                      ],
-                      "techniques": [
-                        "T1014",
-                        "T1060"
-                      ]
+                      "start-time": "2022-03-04T14:20:13.216631809+01:00",
+                      "std-dev-alert-criticality": 0,
+                      "std-dev-signature-criticality": -92233720368547760,
+                      "stop-time": "2022-03-04T14:20:13.220224668+01:00",
+                      "sum-alert-criticality": 0,
+                      "sum-rule-criticality": 0,
+                      "tactics": null,
+                      "techniques": null
                     }
                   ],
                   "error": "",
@@ -1687,12 +2822,12 @@ var OpenAPIDefinition = `
         "tags": [
           "IoC Management (control IoCs pushed on Endpoints)"
         ],
-        "summary": "Query IoCs loaded on manager and currently pushed to endpoints",
+        "summary": "Query IoCs loaded on manager and currently pushed to endpoints.\n\t\t\t\tQuery parameters can be used to restrict the search. Search criteria are\n\t\t\t\tORed together.",
         "parameters": [
           {
-            "name": "source",
+            "name": "uuid",
             "in": "query",
-            "description": "Filter by source",
+            "description": "Filter by uuid",
             "required": false,
             "allowEmptyValue": true,
             "schema": {
@@ -1700,9 +2835,19 @@ var OpenAPIDefinition = `
             }
           },
           {
-            "name": "key",
+            "name": "guuid",
             "in": "query",
-            "description": "Filter by key",
+            "description": "Filter by group uuid\n\t\t\t\t\t(used to group IoCs, from the same event for example)",
+            "required": false,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "description": "Filter by source",
             "required": false,
             "allowEmptyValue": true,
             "schema": {
@@ -1738,9 +2883,10 @@ var OpenAPIDefinition = `
                 "example": {
                   "data": [
                     {
-                      "key": "fca13c28-c70d-79c7-4645-d667d616a461",
+                      "guuid": "3298e002-14d5-85ec-d9a0-1c1dcc98abd7",
                       "source": "XyzTIProvider",
                       "type": "domain",
+                      "uuid": "5be6df57-7e37-a645-5546-23b35dddcf10",
                       "value": "some.random.domain"
                     }
                   ],
@@ -1768,13 +2914,16 @@ var OpenAPIDefinition = `
                     "Item": {
                       "type": "object"
                     },
-                    "key": {
+                    "guuid": {
                       "type": "string"
                     },
                     "source": {
                       "type": "string"
                     },
                     "type": {
+                      "type": "string"
+                    },
+                    "uuid": {
                       "type": "string"
                     },
                     "value": {
@@ -1785,8 +2934,9 @@ var OpenAPIDefinition = `
               },
               "example": [
                 {
+                  "uuid": "5be6df57-7e37-a645-5546-23b35dddcf10",
+                  "guuid": "3298e002-14d5-85ec-d9a0-1c1dcc98abd7",
                   "source": "XyzTIProvider",
-                  "key": "fca13c28-c70d-79c7-4645-d667d616a461",
                   "value": "some.random.domain",
                   "type": "domain"
                 }
@@ -1801,9 +2951,17 @@ var OpenAPIDefinition = `
             "content": {
               "application/json": {
                 "example": {
-                  "data": null,
-                  "message": "",
-                  "error": ""
+                  "data": [
+                    {
+                      "guuid": "3298e002-14d5-85ec-d9a0-1c1dcc98abd7",
+                      "source": "XyzTIProvider",
+                      "type": "domain",
+                      "uuid": "5be6df57-7e37-a645-5546-23b35dddcf10",
+                      "value": "some.random.domain"
+                    }
+                  ],
+                  "error": "",
+                  "message": "OK"
                 }
               }
             }
@@ -1814,12 +2972,12 @@ var OpenAPIDefinition = `
         "tags": [
           "IoC Management (control IoCs pushed on Endpoints)"
         ],
-        "summary": "Delete IoCs from manager, modulo a synchronization delay, endpoints should \n\t\t\tstop using those for detection",
+        "summary": "Delete IoCs from manager, modulo a synchronization delay, endpoints should \n\t\t\tstop using those for detection. Query parameters can be used to select IoCs to delete.\n\t\t\tDeletion criteria are ANDed together.",
         "parameters": [
           {
-            "name": "source",
+            "name": "uuid",
             "in": "query",
-            "description": "Filter by source",
+            "description": "Filter by uuid",
             "required": false,
             "allowEmptyValue": true,
             "schema": {
@@ -1827,9 +2985,19 @@ var OpenAPIDefinition = `
             }
           },
           {
-            "name": "key",
+            "name": "guuid",
             "in": "query",
-            "description": "Filter by key",
+            "description": "Filter by group uuid\n\t\t\t\t\t(used to group IoCs, from the same event for example)",
+            "required": false,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "description": "Filter by source",
             "required": false,
             "allowEmptyValue": true,
             "schema": {
@@ -1863,14 +3031,7 @@ var OpenAPIDefinition = `
             "content": {
               "application/json": {
                 "example": {
-                  "data": [
-                    {
-                      "key": "fca13c28-c70d-79c7-4645-d667d616a461",
-                      "source": "XyzTIProvider",
-                      "type": "domain",
-                      "value": "some.random.domain"
-                    }
-                  ],
+                  "data": null,
                   "error": "",
                   "message": "OK"
                 }
@@ -1973,131 +3134,136 @@ var OpenAPIDefinition = `
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "Actions": {
-                    "type": "array",
-                    "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "Actions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "Condition": {
                       "type": "string"
-                    }
-                  },
-                  "Condition": {
-                    "type": "string"
-                  },
-                  "Matches": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "Meta": {
-                    "type": "object",
-                    "properties": {
-                      "ATTACK": {
-                        "type": "array",
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "": {
-                              "type": "string"
-                            },
-                            "ID": {
-                              "type": "string"
-                            },
-                            "Reference": {
-                              "type": "string"
-                            },
-                            "Tactic": {
-                              "type": "string"
+                    },
+                    "Matches": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "Meta": {
+                      "type": "object",
+                      "properties": {
+                        "ATTACK": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "": {
+                                "type": "string"
+                              },
+                              "ID": {
+                                "type": "string"
+                              },
+                              "Reference": {
+                                "type": "string"
+                              },
+                              "Tactic": {
+                                "type": "string"
+                              }
                             }
                           }
-                        }
-                      },
-                      "Computers": {
-                        "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
-                      },
-                      "Criticality": {
-                        "type": "integer",
-                        "format": "int64"
-                      },
-                      "Disable": {
-                        "type": "boolean"
-                      },
-                      "Events": {
-                        "type": "object",
-                        "properties": {
-                          "key(string)": {
-                            "type": "array",
-                            "items": {
+                        },
+                        "Computers": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "Criticality": {
+                          "type": "integer",
+                          "format": "int64"
+                        },
+                        "Disable": {
+                          "type": "boolean"
+                        },
+                        "Events": {
+                          "type": "object",
+                          "properties": {
+                            "key(string)": {
+                              "type": "array",
+                              "items": {
+                                "type": "integer",
+                                "format": "int64"
+                              }
+                            }
+                          }
+                        },
+                        "Filter": {
+                          "type": "boolean"
+                        },
+                        "Schema": {
+                          "type": "object",
+                          "properties": {
+                            "Major": {
+                              "type": "integer",
+                              "format": "int64"
+                            },
+                            "Minor": {
+                              "type": "integer",
+                              "format": "int64"
+                            },
+                            "Patch": {
                               "type": "integer",
                               "format": "int64"
                             }
                           }
                         }
-                      },
-                      "Filter": {
-                        "type": "boolean"
-                      },
-                      "Schema": {
-                        "type": "object",
-                        "properties": {
-                          "Major": {
-                            "type": "integer",
-                            "format": "int64"
-                          },
-                          "Minor": {
-                            "type": "integer",
-                            "format": "int64"
-                          },
-                          "Patch": {
-                            "type": "integer",
-                            "format": "int64"
-                          }
-                        }
                       }
-                    }
-                  },
-                  "Name": {
-                    "type": "string"
-                  },
-                  "Tags": {
-                    "type": "array",
-                    "items": {
+                    },
+                    "Name": {
                       "type": "string"
+                    },
+                    "Tags": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
                     }
                   }
                 }
               },
-              "example": {
-                "Name": "TestRule",
-                "Tags": null,
-                "Meta": {
-                  "Events": {
-                    "Microsoft-Windows-Sysmon/Operational": [
-                      11,
-                      23,
-                      26
-                    ]
+              "example": [
+                {
+                  "Name": "TestRule",
+                  "Tags": null,
+                  "Meta": {
+                    "Events": {
+                      "Microsoft-Windows-Sysmon/Operational": [
+                        11,
+                        23,
+                        26
+                      ]
+                    },
+                    "Computers": null,
+                    "Criticality": 10,
+                    "Disable": false,
+                    "Filter": false,
+                    "Schema": "2.0.0"
                   },
-                  "Computers": null,
-                  "Criticality": 10,
-                  "Disable": false,
-                  "Filter": false,
-                  "Schema": "2.0.0"
-                },
-                "Matches": [
-                  "$foo: Image ~= 'C:\\\\Malware.exe'",
-                  "$bar: TargetFilename ~= 'C:\\\\config.txt'"
-                ],
-                "Condition": "$foo or $bar",
-                "Actions": [
-                  "memdump",
-                  "kill"
-                ]
-              }
+                  "Matches": [
+                    "$foo: Image ~= 'C:\\\\Malware.exe'",
+                    "$bar: TargetFilename ~= 'C:\\\\config.txt'"
+                  ],
+                  "Condition": "$foo or $bar",
+                  "Actions": [
+                    "memdump",
+                    "kill"
+                  ]
+                }
+              ]
             }
           },
           "required": true
@@ -2108,9 +3274,37 @@ var OpenAPIDefinition = `
             "content": {
               "application/json": {
                 "example": {
-                  "data": null,
+                  "data": [
+                    {
+                      "Actions": [
+                        "memdump",
+                        "kill"
+                      ],
+                      "Condition": "$foo or $bar",
+                      "Matches": [
+                        "$foo: Image ~= 'C:\\\\Malware.exe'",
+                        "$bar: TargetFilename ~= 'C:\\\\config.txt'"
+                      ],
+                      "Meta": {
+                        "Computers": null,
+                        "Criticality": 10,
+                        "Disable": false,
+                        "Events": {
+                          "Microsoft-Windows-Sysmon/Operational": [
+                            11,
+                            23,
+                            26
+                          ]
+                        },
+                        "Filter": false,
+                        "Schema": "2.0.0"
+                      },
+                      "Name": "TestRule",
+                      "Tags": null
+                    }
+                  ],
                   "error": "",
-                  "message": "Rules updated succesfully, engine needs to be reloaded"
+                  "message": "OK"
                 }
               }
             }
@@ -2126,7 +3320,7 @@ var OpenAPIDefinition = `
           {
             "name": "name",
             "in": "query",
-            "description": "Regex matching the names of the rules to delete",
+            "description": "Name of the rule to delete. To avoid mistakes, this\n\t\t\t\tparameter cannot be a regex.",
             "required": false,
             "allowEmptyValue": true,
             "schema": {
@@ -2140,56 +3334,37 @@ var OpenAPIDefinition = `
             "content": {
               "application/json": {
                 "example": {
-                  "data": null,
-                  "error": "",
-                  "message": "Rules updated succesfully, engine needs to be reloaded"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rules/reload": {
-      "get": {
-        "tags": [
-          "Rules Management"
-        ],
-        "summary": "Reload rules to engine",
-        "responses": {
-          "200": {
-            "description": "HTTP 200 response",
-            "content": {
-              "application/json": {
-                "example": {
-                  "data": {
-                    "endpoint-count": 1,
-                    "rule-count": 133
-                  },
+                  "data": [
+                    {
+                      "Actions": [
+                        "memdump",
+                        "kill"
+                      ],
+                      "Condition": "$foo or $bar",
+                      "Matches": [
+                        "$foo: Image ~= 'C:\\\\Malware.exe'",
+                        "$bar: TargetFilename ~= 'C:\\\\config.txt'"
+                      ],
+                      "Meta": {
+                        "Computers": null,
+                        "Criticality": 10,
+                        "Disable": false,
+                        "Events": {
+                          "Microsoft-Windows-Sysmon/Operational": [
+                            11,
+                            23,
+                            26
+                          ]
+                        },
+                        "Filter": false,
+                        "Schema": "2.0.0"
+                      },
+                      "Name": "TestRule",
+                      "Tags": null
+                    }
+                  ],
                   "error": "",
                   "message": "OK"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/rules/save": {
-      "get": {
-        "tags": [
-          "Rules Management"
-        ],
-        "summary": "Save rules for persistence",
-        "responses": {
-          "200": {
-            "description": "HTTP 200 response",
-            "content": {
-              "application/json": {
-                "example": {
-                  "data": null,
-                  "error": "",
-                  "message": "Rules saved succesfully on disk"
                 }
               }
             }
@@ -2211,7 +3386,7 @@ var OpenAPIDefinition = `
                 "example": {
                   "data": {
                     "endpoint-count": 1,
-                    "rule-count": 133
+                    "rule-count": 0
                   },
                   "error": "",
                   "message": "OK"
@@ -2278,8 +3453,8 @@ var OpenAPIDefinition = `
                     "description": "",
                     "group": "",
                     "identifier": "TestAdminUser",
-                    "key": "cSRngvCGmtT1X3WSHzslBbeMLikR8HiVlNSFlGCOgOnf4WpnrUro4VfGFy3n1iKC",
-                    "uuid": "1f729524-8a38-d9c1-96f0-c7a423d067cb"
+                    "key": "Ln81vw3HbIijKvo7M0tkbvSlP3DdPIKiNXKK0xFTcyq5lTftG0Ns8uGKkCNazc9M",
+                    "uuid": "ddedc408-fcde-38df-0e84-b879528d66a7"
                   },
                   "error": "",
                   "message": "OK"
@@ -2322,7 +3497,7 @@ var OpenAPIDefinition = `
                 }
               },
               "example": {
-                "uuid": "49615f8c-2f1f-be1d-f21a-8c59691082c6",
+                "uuid": "a97996ae-530f-4057-ffff-a9e692e4f24b",
                 "identifier": "SecondTestAdmin",
                 "key": "ChangeMe",
                 "group": "CSIRT",
@@ -2343,7 +3518,7 @@ var OpenAPIDefinition = `
                     "group": "CSIRT",
                     "identifier": "SecondTestAdmin",
                     "key": "ChangeMe",
-                    "uuid": "49615f8c-2f1f-be1d-f21a-8c59691082c6"
+                    "uuid": "a97996ae-530f-4057-ffff-a9e692e4f24b"
                   },
                   "error": "",
                   "message": "OK"
@@ -2431,7 +3606,7 @@ var OpenAPIDefinition = `
                     "group": "SOC",
                     "identifier": "SecondTestAdmin",
                     "key": "NewWeakKey",
-                    "uuid": "49615f8c-2f1f-be1d-f21a-8c59691082c6"
+                    "uuid": "a97996ae-530f-4057-ffff-a9e692e4f24b"
                   },
                   "error": "",
                   "message": "OK"
@@ -2469,7 +3644,7 @@ var OpenAPIDefinition = `
                     "group": "SOC",
                     "identifier": "SecondTestAdmin",
                     "key": "NewWeakKey",
-                    "uuid": "49615f8c-2f1f-be1d-f21a-8c59691082c6"
+                    "uuid": "a97996ae-530f-4057-ffff-a9e692e4f24b"
                   },
                   "error": "",
                   "message": "OK"

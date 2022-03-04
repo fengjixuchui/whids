@@ -10,6 +10,8 @@ import (
 	"math"
 	"os"
 	"os/exec"
+	"regexp"
+	"runtime"
 	"strings"
 	"time"
 	"unicode/utf16"
@@ -20,6 +22,14 @@ import (
 	"github.com/0xrawsec/golang-utils/log"
 	"github.com/0xrawsec/whids/utils/powershell"
 )
+
+var (
+	RegexUuid = regexp.MustCompile(`^(?i:[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12})$`)
+)
+
+func IsValidUUID(uuid string) bool {
+	return RegexUuid.MatchString(uuid)
+}
 
 // EnableDNSLogs through wevutil command line
 func EnableDNSLogs() error {
@@ -82,6 +92,24 @@ func Sha256StringArray(array []string) string {
 // the event has been JSON encoded with the json.Marshal
 func HashEventBytes(b []byte) string {
 	return data.Sha1(bytes.Trim(b, " \n\r\t"))
+}
+
+func HashStruct(i interface{}) (h string, err error) {
+	var b []byte
+
+	if b, err = json.Marshal(i); err != nil {
+		return
+	}
+
+	return data.Sha1(bytes.Trim(b, " \n\r\t")), nil
+}
+
+func GetCurFuncName() string {
+	if pc, _, _, ok := runtime.Caller(1); ok {
+		split := strings.Split(runtime.FuncForPC(pc).Name(), "/")
+		return split[len(split)-1]
+	}
+	return "unk.UnknownFunc"
 }
 
 /////////////////////////////// Windows Logger ////////////////////////////////

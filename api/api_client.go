@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -19,7 +20,26 @@ import (
 	"github.com/0xrawsec/golang-utils/crypto/data"
 	"github.com/0xrawsec/golang-utils/fsutil"
 	"github.com/0xrawsec/golang-utils/log"
+	"github.com/0xrawsec/whids/hids/sysinfo"
+	edrOS "github.com/0xrawsec/whids/os"
+	"github.com/0xrawsec/whids/sysmon"
+	"github.com/0xrawsec/whids/utils"
 )
+
+var (
+	ErrServerUnauthenticated    = errors.New("server authentication failed")
+	ErrUnexpectedResponseStatus = errors.New("unexpected response status code")
+	ErrNoSysmonConfig           = errors.New("no sysmon config available")
+)
+
+func ValidateRespStatus(resp *http.Response, status ...int) error {
+	for _, s := range status {
+		if resp.StatusCode == s {
+			return nil
+		}
+	}
+	return fmt.Errorf("%w %d: %s", ErrUnexpectedResponseStatus, resp.StatusCode, respBodyToString(resp))
+}
 
 // ClientConfig structure definition
 type ClientConfig struct {
@@ -229,15 +249,14 @@ func (m *ManagerClient) IsServerUp() bool {
 	}
 	resp, err := m.HTTPClient.Do(get)
 	if err != nil {
-		log.Errorf("IsServerUp cannot issue server key request: %s", err)
 		return false
 	}
 
 	if resp != nil {
 		defer resp.Body.Close()
-		return resp.StatusCode == 200
 	}
-	return false
+
+	return resp.StatusCode == 200
 }
 
 // IsServerAuthenticated returns true if the server is authenticated and thus can be trusted
@@ -524,19 +543,109 @@ func (m *ManagerClient) FetchCommand() (*Command, error) {
 			return command, ErrNothingToDo
 		}
 
-		jsonCommand, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return command, fmt.Errorf("FetchCommand failed to read HTTP response body: %s", err)
-		}
+		if resp.StatusCode == http.StatusOK {
+			jsonCommand, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return command, fmt.Errorf("FetchCommand failed to read HTTP response body: %s", err)
+			}
 
-		// unmarshal command to be executed
-		if err := json.Unmarshal(jsonCommand, &command); err != nil {
-			return command, fmt.Errorf("FetchCommand failed to unmarshal command: %s", err)
-		}
+			// unmarshal command to be executed
+			if err := json.Unmarshal(jsonCommand, &command); err != nil {
+				return command, fmt.Errorf("FetchCommand failed to unmarshal command: %s", err)
+			}
 
-		return command, nil
+			return command, nil
+		}
+		return command, fmt.Errorf("FetchCommand unexpected HTTP status %d", resp.StatusCode)
+
 	}
 	return command, fmt.Errorf("FetchCommand failed, server cannot be authenticated")
+}
+
+func (m *ManagerClient) PostSystemInfo(info *sysinfo.SystemInfo) error {
+	funcName := utils.GetCurFuncName()
+	if auth, _ := m.IsServerAuthenticated(); auth {
+		if b, err := json.Marshal(info); err != nil {
+			return fmt.Errorf("%s failed to marshal data: %s", funcName, err)
+		} else {
+			if req, err := m.PrepareGzip("POST", EptAPIPostSystemInfo, bytes.NewBuffer(b)); err != nil {
+				return err
+			} else {
+				if resp, err := m.HTTPClient.Do(req); err != nil {
+					return fmt.Errorf("%s failed to issue HTTP request: %s", funcName, err)
+				} else {
+					defer resp.Body.Close()
+					if resp.StatusCode != http.StatusOK {
+						return fmt.Errorf("%s received bad status code %d: %s", funcName, resp.StatusCode, respBodyToString(resp))
+					} else {
+						return nil
+					}
+				}
+			}
+		}
+	}
+	return fmt.Errorf("%s %w", funcName, ErrServerUnauthenticated)
+}
+
+func (m *ManagerClient) GetSysmonConfigSha256(schemaVersion string) (sha256 string, err error) {
+	var req *http.Request
+	var resp *http.Response
+
+	if auth, _ := m.IsServerAuthenticated(); !auth {
+		return "", ErrServerUnauthenticated
+	}
+
+	if req, err = m.Prepare("GET", EptAPISysmonConfigSha256Path, nil); err != nil {
+		return
+	}
+
+	requestAddURLParam(req, qpOS, edrOS.OS)
+	requestAddURLParam(req, qpVersion, schemaVersion)
+
+	if resp, err = m.HTTPClient.Do(req); err != nil {
+		return
+	}
+
+	defer resp.Body.Close()
+
+	if err = ValidateRespStatus(resp, http.StatusOK, http.StatusNoContent); err == nil {
+		if resp.StatusCode == http.StatusNoContent {
+			err = ErrNoSysmonConfig
+			return
+		}
+		sha256 = respBodyToString(resp)
+	}
+
+	return
+}
+
+func (m *ManagerClient) GetSysmonConfig(schemaVersion string) (c *sysmon.Config, err error) {
+	var req *http.Request
+	var resp *http.Response
+
+	if auth, _ := m.IsServerAuthenticated(); !auth {
+		return nil, ErrServerUnauthenticated
+	}
+
+	if req, err = m.Prepare("GET", EptAPISysmonConfigPath, nil); err != nil {
+		return
+	}
+
+	requestAddURLParam(req, qpOS, edrOS.OS)
+	requestAddURLParam(req, qpVersion, schemaVersion)
+
+	if resp, err = m.HTTPClient.Do(req); err != nil {
+		return
+	}
+
+	defer resp.Body.Close()
+
+	if err = ValidateRespStatus(resp, http.StatusOK); err == nil {
+		dec := json.NewDecoder(resp.Body)
+		err = dec.Decode(&c)
+	}
+
+	return
 }
 
 // Close closes idle connections from underlying transport

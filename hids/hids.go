@@ -24,9 +24,9 @@ import (
 	"github.com/0xrawsec/golang-utils/fsutil"
 	"github.com/0xrawsec/golang-utils/fsutil/fswalker"
 	"github.com/0xrawsec/golang-utils/log"
-	"github.com/0xrawsec/golang-utils/sync/semaphore"
 	"github.com/0xrawsec/whids/api"
 	"github.com/0xrawsec/whids/event"
+	"github.com/0xrawsec/whids/hids/sysinfo"
 	"github.com/0xrawsec/whids/utils"
 )
 
@@ -42,6 +42,8 @@ var (
 	/** Public vars **/
 
 	ContainRuleName = "EDR containment"
+	MaxEPS          = float64(300)
+	MaxEPSDuration  = 30 * time.Second
 
 	/** Private vars **/
 
@@ -60,27 +62,26 @@ type HIDS struct {
 	cancel       context.CancelFunc
 
 	eventProvider   *etw.Consumer
+	stats           *EventStats
 	preHooks        *HookManager
 	postHooks       *HookManager
 	forwarder       *api.Forwarder
 	channels        *datastructs.SyncedSet // Windows log channels to listen to
 	channelsSignals chan bool
 	config          *Config
-	eventScanned    uint64
-	alertReported   uint64
-	startTime       time.Time
 	waitGroup       sync.WaitGroup
 
 	flagProcTermEn bool
 	bootCompleted  bool
 	// Sysmon GUID of HIDS process
-	guid           string
-	processTracker *ActivityTracker
-	actionHandler  *ActionHandler
-	memdumped      *datastructs.SyncedSet
-	dumping        *datastructs.SyncedSet
-	filedumped     *datastructs.SyncedSet
-	hookSemaphore  semaphore.Semaphore
+	guid          string
+	tracker       *ActivityTracker
+	actionHandler *ActionHandler
+	memdumped     *datastructs.SyncedSet
+	dumping       *datastructs.SyncedSet
+	filedumped    *datastructs.SyncedSet
+
+	systemInfo *sysinfo.SystemInfo
 
 	Engine   *engine.Engine
 	DryRun   bool
@@ -114,17 +115,19 @@ func NewHIDS(c *Config) (h *HIDS, err error) {
 		ctx:             ctx,
 		cancel:          cancel,
 		eventProvider:   etw.NewRealTimeConsumer(ctx),
+		stats:           NewEventStats(MaxEPS, MaxEPSDuration),
 		preHooks:        NewHookMan(),
 		postHooks:       NewHookMan(),
 		channels:        datastructs.NewSyncedSet(),
 		channelsSignals: make(chan bool),
 		config:          c,
 		waitGroup:       sync.WaitGroup{},
-		processTracker:  NewActivityTracker(),
+		tracker:         NewActivityTracker(),
 		memdumped:       datastructs.NewSyncedSet(),
 		dumping:         datastructs.NewSyncedSet(),
 		filedumped:      datastructs.NewSyncedSet(),
-		hookSemaphore:   semaphore.New(4),
+		// has to be empty to post structure the first time
+		systemInfo: &sysinfo.SystemInfo{},
 	}
 
 	// initializing action manager
@@ -152,7 +155,7 @@ func NewHIDS(c *Config) (h *HIDS, err error) {
 	h.cleanup()
 
 	// initialization
-	h.initChannels()
+	h.initEventProvider()
 	h.initHooks(c.EnableHooks)
 	// initializing canaries
 	h.config.CanariesConfig.Configure()
@@ -169,7 +172,18 @@ func NewHIDS(c *Config) (h *HIDS, err error) {
 
 /** Private Methods **/
 
-func (h *HIDS) initChannels() {
+func (h *HIDS) initEventProvider() {
+
+	// parses the providers and init filters
+	for _, sprov := range h.config.EtwConfig.UnifiedProviders() {
+		if prov, err := etw.ProviderFromString(sprov); err != nil {
+			log.Errorf("Error while parsing provider %s: %s", sprov, err)
+		} else {
+			h.eventProvider.Filter.FromProvider(&prov)
+		}
+	}
+
+	// open traces
 	for _, trace := range h.config.EtwConfig.UnifiedTraces() {
 		if err := h.eventProvider.OpenTrace(trace); err != nil {
 			log.Errorf("Failed to open trace %s: %s", trace, err)
@@ -243,13 +257,9 @@ func (h *HIDS) update(force bool) (last error) {
 
 		// Loading IOC container rules
 		for _, rule := range IoCRules {
-			if cr, err := rule.Compile(newEngine); err != nil {
-				err = fmt.Errorf("failed to compile IOC rule: %s", err)
+			if err := newEngine.LoadRule(&rule); err != nil {
+				log.Errorf("Failed to load IoC rule: %s", err)
 				last = err
-			} else {
-				if err = newEngine.AddRule(cr); err != nil {
-					last = err
-				}
 			}
 		}
 
@@ -258,23 +268,23 @@ func (h *HIDS) update(force bool) (last error) {
 			log.Infof("Loading canary rules")
 			// Sysmon rule
 			sr := h.config.CanariesConfig.GenRuleSysmon()
-			if scr, err := sr.Compile(nil); err != nil {
-				err = fmt.Errorf("failed to compile canary rule: %s", err)
+			if err := newEngine.LoadRule(&sr); err != nil {
+				log.Errorf("Failed to load canary rule: %s", err)
 				last = err
-			} else {
-				if err = newEngine.AddRule(scr); err != nil {
-					last = err
-				}
 			}
 
 			// File System Audit Rule
 			fsr := h.config.CanariesConfig.GenRuleFSAudit()
-			if fscr, err := fsr.Compile(nil); err != nil {
-				log.Errorf("Failed to compile canary rule: %s", err)
-			} else {
-				if err = newEngine.AddRule(fscr); err != nil {
-					last = err
-				}
+			if err := newEngine.LoadRule(&fsr); err != nil {
+				log.Errorf("Failed to load canary rule: %s", err)
+				last = err
+			}
+
+			// File System Audit Rule
+			kfr := h.config.CanariesConfig.GenRuleKernelFile()
+			if err := newEngine.LoadRule(&kfr); err != nil {
+				log.Errorf("Failed to load canary rule: %s", err)
+				last = err
 			}
 		}
 
@@ -307,16 +317,22 @@ func (h *HIDS) needsRulesUpdate() bool {
 	_, rulesSha256Path := h.config.RulesConfig.RulesPaths()
 
 	// Don't need update if not connected to a manager
-	if h.config.IsForwardingEnabled() {
+	if !h.config.IsForwardingEnabled() {
 		return false
 	}
 
 	if sha256, err = h.forwarder.Client.GetRulesSha256(); err != nil {
+		log.Errorf("Failed to fetch rules sha256: %s", err)
 		return false
 	}
+
 	oldSha256, _ = utils.ReadFileString(rulesSha256Path)
 
-	log.Debugf("Rules: remote=%s local=%s", sha256, oldSha256)
+	// log message only if we need to update
+	if oldSha256 != sha256 {
+		log.Infof("Rules: remote=%s local=%s", sha256, oldSha256)
+	}
+
 	return oldSha256 != sha256
 }
 
@@ -325,7 +341,7 @@ func (h *HIDS) needsIoCsUpdate() bool {
 	var localSha256, remoteSha256 string
 
 	// Don't need update if not connected to a manager
-	if h.config.IsForwardingEnabled() {
+	if !h.config.IsForwardingEnabled() {
 		return false
 	}
 
@@ -335,7 +351,12 @@ func (h *HIDS) needsIoCsUpdate() bool {
 	// means that remoteCont is also a local container
 	remoteSha256, _ = h.forwarder.Client.GetIoCsSha256()
 	localSha256, _ = utils.ReadFileString(locContSha256Path)
-	log.Infof("container %s: remote=%s local=%s", container, remoteSha256, localSha256)
+
+	// log message only if we need to update
+	if localSha256 != remoteSha256 {
+		log.Infof("container %s: remote=%s local=%s", container, remoteSha256, localSha256)
+	}
+
 	return localSha256 != remoteSha256
 }
 
@@ -551,6 +572,28 @@ func (h *HIDS) cleanArchivedRoutine() bool {
 	return false
 }
 
+func (h *HIDS) updateSystemInfo() (err error) {
+	var hnew, hold string
+
+	new := sysinfo.NewSystemInfo()
+	if hnew, err = utils.HashStruct(new); err != nil {
+		// we return cause we don't want to overwrite with
+		// a faulty structure
+		return
+	}
+
+	// if it returns an error we don't really care because
+	// it will be replaced by new
+	hold, _ = utils.HashStruct(h.systemInfo)
+
+	if hnew != hold {
+		h.systemInfo = new
+		return h.forwarder.Client.PostSystemInfo(h.systemInfo)
+	}
+
+	return
+}
+
 // returns true if the update routine is started
 func (h *HIDS) updateRoutine() bool {
 	d := h.config.RulesConfig.UpdateInterval
@@ -560,6 +603,9 @@ func (h *HIDS) updateRoutine() bool {
 				t := time.NewTimer(d)
 				for range t.C {
 					if err := h.update(false); err != nil {
+						log.Error(err)
+					}
+					if err := h.updateSystemInfo(); err != nil {
 						log.Error(err)
 					}
 					t.Reset(d)
@@ -615,11 +661,13 @@ func (h *HIDS) uploadRoutine() bool {
 								shrink.Close()
 
 								if shrink.Err() == nil {
-									log.Infof("Dump file successfully sent to manager, deleting: %s (err=%s)", fullpath, os.Remove(fullpath))
+									log.Infof("Dump file successfully sent to manager, deleting: %s", fullpath)
+									if err := os.Remove(fullpath); err != nil {
+										log.Errorf("Failed to remove file %s: %s", fullpath, err)
+									}
 								} else {
 									log.Errorf("Failed to post dump file: %s", shrink.Err())
 								}
-
 							} else {
 								log.Errorf("Unexpected directory layout, cannot send dump to manager")
 							}
@@ -744,23 +792,23 @@ func (h *HIDS) handleManagerCommand(cmd *api.Command) {
 		cmd.ExpectJSON = true
 		cmd.Json = h.Report(false)
 	case "processes":
-		h.processTracker.RLock()
+		h.tracker.RLock()
 		cmd.Unrunnable()
 		cmd.ExpectJSON = true
-		cmd.Json = h.processTracker.PS()
-		h.processTracker.RUnlock()
+		cmd.Json = h.tracker.PS()
+		h.tracker.RUnlock()
 	case "modules":
-		h.processTracker.RLock()
+		h.tracker.RLock()
 		cmd.Unrunnable()
 		cmd.ExpectJSON = true
-		cmd.Json = h.processTracker.Modules()
-		h.processTracker.RUnlock()
+		cmd.Json = h.tracker.Modules()
+		h.tracker.RUnlock()
 	case "drivers":
-		h.processTracker.RLock()
+		h.tracker.RLock()
 		cmd.Unrunnable()
 		cmd.ExpectJSON = true
-		cmd.Json = h.processTracker.Drivers
-		h.processTracker.RUnlock()
+		cmd.Json = h.tracker.Drivers
+		h.tracker.RUnlock()
 	}
 
 	// we finally run the command
@@ -828,7 +876,7 @@ func (h *HIDS) IsHIDSEvent(e *event.EdrEvent) bool {
 			return true
 		}
 		// search for parent in processTracker
-		if pt := h.processTracker.GetByGuid(guid); pt != nil {
+		if pt := h.tracker.GetByGuid(guid); !pt.IsZero() {
 			if pt.ParentProcessGUID == h.guid {
 				return true
 			}
@@ -839,7 +887,7 @@ func (h *HIDS) IsHIDSEvent(e *event.EdrEvent) bool {
 			return true
 		}
 		// search for parent in processTracker
-		if pt := h.processTracker.GetByGuid(sguid); pt != nil {
+		if pt := h.tracker.GetByGuid(sguid); !pt.IsZero() {
 			if pt.ParentProcessGUID == h.guid {
 				return true
 			}
@@ -855,13 +903,13 @@ func (h *HIDS) Report(light bool) (r Report) {
 
 	// generate a report for running processes or those terminated still having one child or more
 	// do this step first not to polute report with commands to run
-	r.Processes = h.processTracker.PS()
+	r.Processes = h.tracker.PS()
 
 	// Modules ever loaded
-	r.Modules = h.processTracker.Modules()
+	r.Modules = h.tracker.Modules()
 
 	// Drivers loaded
-	r.Drivers = h.processTracker.Drivers
+	r.Drivers = h.tracker.Drivers
 
 	// if this is a light report, we don't run the commands
 	if !light {
@@ -905,7 +953,9 @@ func (h *HIDS) Run() {
 	// Starting event provider
 	h.eventProvider.Start()
 
-	h.startTime = time.Now()
+	// start stats monitoring
+	h.stats.Start()
+
 	h.waitGroup.Add(1)
 	go func() {
 		defer h.waitGroup.Done()
@@ -918,8 +968,18 @@ func (h *HIDS) Run() {
 		for e := range h.eventProvider.Events {
 			event := event.NewEdrEvent(e)
 
+			if yes, eps := h.stats.HasPerfIssue(); yes {
+				log.Warnf("Average event rate above limit of %.2f e/s in the last %s: %.2f e/s", h.stats.Threshold(), h.stats.Duration(), eps)
+
+				if h.stats.HasCriticalPerfIssue() {
+					log.Critical("Event throughput too high for too long, consider filtering out events")
+				} else if crit := h.stats.CriticalEPS(); eps > crit {
+					log.Criticalf("Event throughput above %.0fx the limit, if repeated consider filtering out events", eps/h.stats.Threshold())
+				}
+			}
+
 			// Warning message in certain circumstances
-			if h.config.EnableHooks && !h.flagProcTermEn && h.eventScanned > 0 && h.eventScanned%1000 == 0 {
+			if h.config.EnableHooks && !h.flagProcTermEn && h.stats.Events() > 0 && int64(h.stats.Events())%1000 == 0 {
 				log.Warn("Sysmon process termination events seem to be missing. WHIDS won't work as expected.")
 			}
 
@@ -936,7 +996,13 @@ func (h *HIDS) Run() {
 				if h.PrintAll {
 					fmt.Println(utils.JsonString(event))
 				}
-				goto LoopTail
+				goto Continue
+			}
+
+			// if event is skipped we don't log it even with PrintAll
+			if event.IsSkipped() {
+				h.stats.Update(event)
+				goto Continue
 			}
 
 			// if the event has matched at least one signature or is filtered
@@ -949,7 +1015,7 @@ func (h *HIDS) Run() {
 					// Pipe the event to be sent to the forwarder
 					// Run hooks post detection
 					h.postHooks.RunHooksOn(h, event)
-					h.alertReported++
+					h.stats.Update(event)
 				case filtered && h.config.EnableFiltering && !h.PrintAll && !h.config.LogAll:
 					//event.Del(&engine.GeneInfoPath)
 					// we pipe filtered event
@@ -970,9 +1036,9 @@ func (h *HIDS) Run() {
 				h.forwarder.PipeEvent(event)
 			}
 
-			h.eventScanned++
+			h.stats.Update(event)
 
-		LoopTail:
+		Continue:
 			h.RUnlock()
 		}
 		log.Infof("HIDS main loop terminated")
@@ -985,11 +1051,10 @@ func (h *HIDS) Run() {
 
 // LogStats logs whids statistics
 func (h *HIDS) LogStats() {
-	stop := time.Now()
-	log.Infof("Time Running: %s", stop.Sub(h.startTime))
-	log.Infof("Count Event Scanned: %d", h.eventScanned)
-	log.Infof("Average Event Rate: %.2f EPS", float64(h.eventScanned)/(stop.Sub(h.startTime).Seconds()))
-	log.Infof("Alerts Reported: %d", h.alertReported)
+	log.Infof("Time Running: %s", h.stats.SinceStart())
+	log.Infof("Count Event Scanned: %.0f", h.stats.Events())
+	log.Infof("Average Event Rate: %.2f EPS", h.stats.EPS())
+	log.Infof("Alerts Reported: %.0f", h.stats.Detections())
 	log.Infof("Count Rules Used (loaded + generated): %d", h.Engine.Count())
 }
 
@@ -1018,8 +1083,12 @@ func (h *HIDS) Stop() {
 
 	// updating autologger configuration
 	log.Infof("Updating autologger configuration")
+	if err := Autologger.Delete(); err != nil {
+		log.Errorf("Failed to delete autologger:", err)
+	}
+
 	if err := h.config.EtwConfig.ConfigureAutologger(); err != nil {
-		log.Errorf("Failed to update autologger configuration", err)
+		log.Errorf("Failed to update autologger configuration:", err)
 	}
 
 	log.Infof("HIDS stopped")

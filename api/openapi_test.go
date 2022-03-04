@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"net/http"
 	"os"
@@ -10,13 +12,119 @@ import (
 
 	"github.com/0xrawsec/gene/v2/engine"
 	"github.com/0xrawsec/golang-utils/code/builder"
+	"github.com/0xrawsec/toast"
+	"github.com/0xrawsec/whids/api/openapi"
+	"github.com/0xrawsec/whids/hids/sysinfo"
 	"github.com/0xrawsec/whids/ioc"
-	"github.com/0xrawsec/whids/openapi"
+	"github.com/0xrawsec/whids/sysmon"
 )
 
 const (
 	guid      = "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d"
 	eventHash = "3d8441643c204ba9b9dcb5c414b25a3129f66f6c"
+
+	fakeSystemInfo = `
+		{
+		"system": {
+			"manufacturer": "innotek GmbH",
+			"name": "VirtualBox",
+			"virtual": true
+		},
+		"bios": {
+			"version": "VirtualBox",
+			"date": "12/01/2006"
+		},
+		"os": {
+			"name": "windows",
+			"build": "18362",
+			"version": "10.0.18362",
+			"product": "Windows 10 Pro",
+			"edition": "Enterprise"
+		},
+		"cpu": {
+			"name": "Intel(R) Core(TM) i7-8565U CPU @ 1.80GHz",
+			"count": 4
+		},
+		"sysmon": {
+			"version": "v13.23",
+			"service": {
+			"name": "Sysmon64",
+			"image": "C:\\Program Files\\Whids\\Sysmon64.exe",
+			"sha256": "b448cd80b09fa43a3848f5181362ac52ffcb283f88693b68f1a0e4e6ae932863"
+			},
+			"driver": {
+			"name": "SysmonDrv",
+			"image": "C:\\Windows\\SysmonDrv.sys",
+			"sha256": "e9ea8c0390c65c055d795b301ee50de8f8884313530023918c2eea56de37a525"
+			},
+			"config": {
+			"version": {
+				"schema": "4.70",
+				"binary": "15.0"
+			},
+			"hash": "2d1652d67b565cabf2e774668f2598188373e957ef06aa5653bf9bf6fe7fe837"
+			}
+		}
+	}
+	`
+
+	sysmonXMLConfig = `<Sysmon schemaversion="4.70">
+  <CheckRevocation>false</CheckRevocation>
+  <CopyOnDeletePE>false</CopyOnDeletePE>
+  <DnsLookup>false</DnsLookup>
+  <HashAlgorithms>*</HashAlgorithms>
+  <EventFiltering>
+    <ProcessCreate onmatch="exclude"></ProcessCreate>
+    <FileCreateTime onmatch="exclude"></FileCreateTime>
+    <NetworkConnect onmatch="exclude"></NetworkConnect>
+    <ProcessTerminate onmatch="exclude"></ProcessTerminate>
+    <DriverLoad onmatch="exclude"></DriverLoad>
+    <CreateRemoteThread onmatch="exclude"></CreateRemoteThread>
+    <RawAccessRead onmatch="exclude"></RawAccessRead>
+    <FileCreate onmatch="exclude"></FileCreate>
+    <FileCreateStreamHash onmatch="exclude"></FileCreateStreamHash>
+    <PipeEvent onmatch="exclude"></PipeEvent>
+    <WmiEvent onmatch="exclude"></WmiEvent>
+    <FileDelete onmatch="exclude"></FileDelete>
+    <ClipboardChange onmatch="exclude"></ClipboardChange>
+    <ProcessTampering onmatch="exclude"></ProcessTampering>
+    <FileDeleteDetected onmatch="exclude"></FileDeleteDetected>
+    <RuleGroup groupRelation="or">
+      <ImageLoad onmatch="exclude">
+        <Image condition="is">C:\Windows\Sysmon.exe</Image>
+        <Image condition="is">C:\Windows\Sysmon64.exe</Image>
+        <Signature condition="is">Microsoft Windows Publisher</Signature>
+        <Signature condition="is">Microsoft Corporation</Signature>
+        <Signature condition="is">Microsoft Windows</Signature>
+      </ImageLoad>
+    </RuleGroup>
+    <RuleGroup groupRelation="or">
+      <ProcessAccess onmatch="exclude">
+        <SourceImage condition="is">C:\Windows\system32\wbem\wmiprvse.exe</SourceImage>
+        <SourceImage condition="is">C:\Windows\System32\VBoxService.exe</SourceImage>
+        <SourceImage condition="is">C:\Windows\system32\taskmgr.exe</SourceImage>
+        <GrantedAccess condition="is">0x1000</GrantedAccess>
+        <GrantedAccess condition="is">0x2000</GrantedAccess>
+        <GrantedAccess condition="is">0x3000</GrantedAccess>
+        <GrantedAccess condition="is">0x100000</GrantedAccess>
+        <GrantedAccess condition="is">0x101000</GrantedAccess>
+      </ProcessAccess>
+    </RuleGroup>
+    <RuleGroup groupRelation="or">
+      <RegistryEvent onmatch="exclude">
+        <EventType condition="is not">SetValue</EventType>
+        <Image condition="is">C:\Windows\Sysmon.exe</Image>
+        <Image condition="is">C:\Windows\Sysmon64.exe</Image>
+      </RegistryEvent>
+    </RuleGroup>
+    <RuleGroup groupRelation="or">
+      <DnsQuery onmatch="exclude">
+        <Image condition="is">C:\Windows\Sysmon.exe</Image>
+        <Image condition="is">C:\Windows\Sysmon64.exe</Image>
+      </DnsQuery>
+    </RuleGroup>
+  </EventFiltering>
+</Sysmon>`
 )
 
 var (
@@ -29,12 +137,37 @@ var (
 		&openapi.Server{
 			URL: mconf.AdminAPIUrl(),
 		})
+
+	systemInfo = &sysinfo.SystemInfo{}
 )
 
 func init() {
 	openAPI.AuthApiKey(AuthKeyHeader, testAdminUser.Key)
 	openAPI.Client = &http.Client{Transport: cconf.Transport()}
+	openAPI.ValidateOperation = validateOperation
 	Hostname = "OpenHappy"
+
+	if err := json.Unmarshal([]byte(fakeSystemInfo), systemInfo); err != nil {
+		panic(err)
+	}
+}
+
+func validateOperation(output interface{}) (err error) {
+	var data []byte
+	var resp AdminAPIResponse
+
+	if data, err = json.Marshal(output); err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return err
+	}
+
+	if err := resp.Err(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func prep() (m *Manager, c *ManagerClient) {
@@ -72,15 +205,10 @@ func prep() (m *Manager, c *ManagerClient) {
 	f.Run()
 	defer f.Close()
 
+	// Create fake events on client
 	for e := range emitMixedEvents(50, 50) {
 		f.PipeEvent(e)
 	}
-
-	return
-}
-
-func runAdminApiTest(t *testing.T, f func(*testing.T)) {
-	m, c := prep()
 
 	// Create fake dumps
 	for _, name := range []string{"foo.txt", "bar.txt"} {
@@ -93,6 +221,24 @@ func runAdminApiTest(t *testing.T, f func(*testing.T)) {
 			Total:     1,
 		})
 	}
+
+	// post fake system information
+	if err := c.PostSystemInfo(systemInfo); err != nil {
+		panic(err)
+	}
+
+	return
+}
+
+func cleanup(m *Manager) {
+	m.Shutdown()
+	m.Wait()
+	os.RemoveAll(m.Config.Database)
+	os.RemoveAll(m.Config.DumpDir)
+}
+
+func runAdminApiTest(t *testing.T, f func(*testing.T)) {
+	m, c := prep()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
@@ -118,10 +264,7 @@ func runAdminApiTest(t *testing.T, f func(*testing.T)) {
 
 	defer func() {
 		cancel()
-		m.Shutdown()
-		m.Wait()
-		os.RemoveAll(m.Config.Database)
-		os.RemoveAll(m.Config.DumpDir)
+		cleanup(m)
 	}()
 	f(t)
 }
@@ -506,12 +649,13 @@ func TestOpenApiIoCs(t *testing.T) {
 			Method:  "POST",
 			Summary: "Add IoCs to be pushed on endpoints for detection",
 			RequestBody: openapi.JsonRequestBody("",
-				[]ioc.IoC{
+				[]ioc.IOC{
 					{
-						Source: provider,
-						Key:    UUIDGen().String(),
-						Value:  "some.random.domain",
-						Type:   "domain",
+						Uuid:      UUIDGen().String(),
+						GroupUuid: UUIDGen().String(),
+						Source:    provider,
+						Value:     "some.random.domain",
+						Type:      "domain",
 					},
 				},
 				true),
@@ -519,11 +663,15 @@ func TestOpenApiIoCs(t *testing.T) {
 		})
 
 		openAPI.Do(iocsPath, openapi.Operation{
-			Method:  "GET",
-			Summary: "Query IoCs loaded on manager and currently pushed to endpoints",
+			Method: "GET",
+			Summary: `Query IoCs loaded on manager and currently pushed to endpoints.
+				Query parameters can be used to restrict the search. Search criteria are
+				ORed together.`,
 			Parameters: []*openapi.Parameter{
+				openapi.QueryParameter(qpUuid, "Test", "Filter by uuid").Skip(),
+				openapi.QueryParameter(qpGroupUuid, "Test", `Filter by group uuid
+					(used to group IoCs, from the same event for example)`).Skip(),
 				openapi.QueryParameter(qpSource, "Test", "Filter by source").Skip(),
-				openapi.QueryParameter(qpKey, "Test", "Filter by key").Skip(),
 				openapi.QueryParameter(qpValue, "Test", "Filter by value").Skip(),
 				openapi.QueryParameter(qpType, "Test", "Filter by type").Skip(),
 			},
@@ -533,10 +681,13 @@ func TestOpenApiIoCs(t *testing.T) {
 		openAPI.Do(iocsPath, openapi.Operation{
 			Method: "DELETE",
 			Summary: `Delete IoCs from manager, modulo a synchronization delay, endpoints should 
-			stop using those for detection`,
+			stop using those for detection. Query parameters can be used to select IoCs to delete.
+			Deletion criteria are ANDed together.`,
 			Parameters: []*openapi.Parameter{
-				openapi.QueryParameter(qpSource, provider, "Filter by source"),
-				openapi.QueryParameter(qpKey, "Test", "Filter by key").Skip(),
+				openapi.QueryParameter(qpUuid, "Test", "Filter by uuid").Skip(),
+				openapi.QueryParameter(qpGroupUuid, "Test", `Filter by group uuid
+					(used to group IoCs, from the same event for example)`).Skip(),
+				openapi.QueryParameter(qpSource, "Test", "Filter by source").Skip(),
 				openapi.QueryParameter(qpValue, "Test", "Filter by value").Skip(),
 				openapi.QueryParameter(qpType, "Test", "Filter by type").Skip(),
 			},
@@ -566,19 +717,21 @@ func TestOpenApiRules(t *testing.T) {
 			},
 			RequestBody: openapi.JsonRequestBody(
 				"Rule to add to the manager",
-				engine.Rule{
-					Name: name,
-					Meta: engine.MetaSection{
-						Events:      map[string][]int64{"Microsoft-Windows-Sysmon/Operational": {11, 23, 26}},
-						Criticality: 10,
-						Schema:      engine.ParseVersion("2.0.0"),
+				[]engine.Rule{
+					{
+						Name: name,
+						Meta: engine.MetaSection{
+							Events:      map[string][]int64{"Microsoft-Windows-Sysmon/Operational": {11, 23, 26}},
+							Criticality: 10,
+							Schema:      engine.ParseVersion("2.0.0"),
+						},
+						Matches: []string{
+							fmt.Sprintf("$foo: Image ~= '%s'", `C:\\Malware.exe`),
+							fmt.Sprintf("$bar: TargetFilename ~= '%s'", `C:\\config.txt`),
+						},
+						Condition: "$foo or $bar",
+						Actions:   []string{"memdump", "kill"},
 					},
-					Matches: []string{
-						fmt.Sprintf("$foo: Image ~= '%s'", `C:\\Malware.exe`),
-						fmt.Sprintf("$bar: TargetFilename ~= '%s'", `C:\\config.txt`),
-					},
-					Condition: "$foo or $bar",
-					Actions:   []string{"memdump", "kill"},
 				},
 				true),
 			Output: AdminAPIResponse{},
@@ -599,28 +752,11 @@ func TestOpenApiRules(t *testing.T) {
 			Method:  "DELETE",
 			Summary: "Delete rules from manager",
 			Parameters: []*openapi.Parameter{
-				openapi.QueryParameter(qpName, name, "Regex matching the names of the rules to delete"),
+				openapi.QueryParameter(qpName, name, `Name of the rule to delete. To avoid mistakes, this
+				parameter cannot be a regex.`),
 			},
 			Output: AdminAPIResponse{},
 		})
-
-		// Save
-		openAPI.Do(
-			openapi.PathItem{Summary: sum, Value: AdmAPIRulesSavePath},
-			openapi.Operation{
-				Method:  "GET",
-				Summary: "Save rules for persistence",
-				Output:  AdminAPIResponse{},
-			})
-
-		// Reload
-		openAPI.Do(
-			openapi.PathItem{Summary: sum, Value: AdmAPIRulesReloadPath},
-			openapi.Operation{
-				Method:  "GET",
-				Summary: "Reload rules to engine",
-				Output:  AdminAPIResponse{},
-			})
 
 	}
 
@@ -628,7 +764,63 @@ func TestOpenApiRules(t *testing.T) {
 	t.Log(prettyJSON(openAPI))
 }
 
-func TestOpenApiTemplate(t *testing.T) {
+func TestOpenApiSysmonConfig(t *testing.T) {
+
+	f := func(t *testing.T) {
+
+		tt := toast.FromT(t)
+
+		path := openapi.PathItem{
+			Summary: "Manage sysmon configuration",
+			Value:   AdmAPIEndpointsPath,
+		}
+
+		config := &sysmon.Config{}
+		tt.CheckErr(xml.Unmarshal([]byte(sysmonXMLConfig), &config))
+		config.OS = "windows"
+
+		openAPI.Do(path, openapi.Operation{
+			Method:  "POST",
+			Summary: "Add or update a sysmon configuration",
+			Parameters: []*openapi.Parameter{
+				openapi.PathParameter("os", "windows").Suffix("/sysmon").Suffix("/config"),
+				openapi.QueryParameter("format", "xml"),
+			},
+			RequestBody: openapi.XMLRequestBody(
+				"Sysmon configuration file. Raw XML file that you would use to configure Sysmon can be posted here.",
+				config,
+				true,
+			),
+			Output: AdminAPIResponse{},
+		})
+
+		openAPI.Do(path, openapi.Operation{
+			Method:  "GET",
+			Summary: "Get a sysmon configuration",
+			Parameters: []*openapi.Parameter{
+				openapi.PathParameter("os", "windows").Suffix("/sysmon").Suffix("/config"),
+				openapi.QueryParameter("version", "4.70").Require(),
+				openapi.QueryParameter("format", "json"),
+				openapi.QueryParameter("raw", true).Skip(),
+			},
+			Output: AdminAPIResponse{},
+		})
+
+		openAPI.Do(path, openapi.Operation{
+			Method:  "DELETE",
+			Summary: "Delete a sysmon configuration",
+			Parameters: []*openapi.Parameter{
+				openapi.PathParameter("os", "windows").Suffix("/sysmon").Suffix("/config"),
+				openapi.QueryParameter("version", "4.70").Require(),
+			},
+			Output: AdminAPIResponse{},
+		})
+	}
+
+	runAdminApiTest(t, f)
+}
+
+func TestOpenApiStatistics(t *testing.T) {
 	f := func(t *testing.T) {
 
 		path := openapi.PathItem{

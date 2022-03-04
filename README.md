@@ -1,4 +1,4 @@
-**IMPORTANT:** this README and other documentation is not updated to reflect the changes made to latest beta releases (as a lot of changes happened). All this will be updated in time when a stable version will be released. Feel free to run beta releases on your own and ask questions if you need help.
+**IMPORTANT:** this README and other documentation is not updated to reflect the changes made to latest beta releases (as a lot of changes happened). All this will be updated in time when a stable version will be released (see [Roadmap until next release](#roadmap-until-next-release)). Feel free to run beta releases on your own and ask questions if you need help.
 
 <p align="center">
   <img src="./doc/img/logo.png" alt="logo" width="40%">
@@ -8,6 +8,7 @@
 [![Latest Commit](https://badgen.net/github/last-commit/0xrawsec/whids)](https://github.com/0xrawsec/whids/commits/master)
 [![Latest Release](https://badgen.net/github/release/0xrawsec/whids)](https://github.com/0xrawsec/whids/releases)
 [![License](https://badgen.net/github/license/0xrawsec/whids)](https://raw.githubusercontent.com/0xrawsec/whids/master/LICENSE)
+[<img src="https://validator.swagger.io/validator?url=https://raw.githubusercontent.com/0xrawsec/whids/master/doc/admin.openapi.json" style="height:20px">](https://validator.swagger.io/?url=https://raw.githubusercontent.com/0xrawsec/whids/master/doc/admin.openapi.json)
 
 ## What
 
@@ -114,7 +115,7 @@ Please visit [doc/configuration.md](doc/configuration.md)
 
 # Further Documentation
 
-* [Endpoint Manager REST API documentation](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/0xrawsec/whids/master/doc/admin.openapi.json)
+* [Endpoint Manager REST API documentation](https://validator.swagger.io/?url=https://raw.githubusercontent.com/0xrawsec/whids/master/doc/admin.openapi.json)
 * [How to write rules](https://rawsec.lu/doc/gene/1.6/)
 * [Getting EDR detection rules](https://github.com/0xrawsec/gene-rules)
 * [Overview of events enrichment](https://github.com/0xrawsec/whids/blob/master/doc/events-table.md)
@@ -122,6 +123,29 @@ Please visit [doc/configuration.md](doc/configuration.md)
 # Known Issues
 
 * Does not work properly when ran from a network share **mapped as a network drive** (this case prevent whids to identify itself and thus generate some noise). Example: if `\\vbox\test` is mounted as `Z:` drive, running `Z:\whids.exe` **won't work** while running `\\vbox\test\whids.exe` actually would.
+
+# Roadmap until next release
+
+  - [ ] find a new name to the project because we all agree it sucks
+  - [ ] better sysmon integration (config, deployment, update)
+  - [ ] endpoint configuration from manager
+  - [ ] tooling management (update, install), like OSQuery
+  - [ ] code refactoring and optimization
+  - [X] implement a performance monitor
+  - [X] get rid of any on-disk configuration
+  - [X] implement IOC management capabilities
+  - [X] ETW support
+  - [X] automatic documentation and testing of manager's API
+  - [X] provide endpoint system information in manager
+  - [X] implement actionable rules
+  - [X] provide canary file management
+  - [X] builtin commands to be executed by endpoints
+  - [X] provide Incident Response reports about endpoints
+  - [X] overall manager API improvement
+  - [X] provide event streams so that a client can receive events in realtime
+  - [X] standardize HTTP headers
+  - [X] provide a python library to interact with EDR manager (https://github.com/0xrawsec/pywhids)
+
 
 # Changelog
 

@@ -16,7 +16,6 @@ const (
 	qpDelta       = "delta"
 	qpSkip        = "skip"
 	qpSource      = "source"
-	qpKey         = "key"
 	qpValue       = "value"
 	qpType        = "type"
 	qpName        = "name"
@@ -24,4 +23,9 @@ const (
 	qpUpdate      = "update"
 	qpRaw         = "raw"
 	qpGunzip      = "gunzip"
+	qpUuid        = "uuid"
+	qpGroupUuid   = "guuid"
+	qpFormat      = "format"
+	qpVersion     = "version"
+	qpOS          = "os"
 )

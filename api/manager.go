@@ -7,6 +7,7 @@ import (
 	crand "crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -18,11 +19,15 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/0xrawsec/sod"
 	"github.com/0xrawsec/whids/event"
 	"github.com/0xrawsec/whids/ioc"
+	"github.com/0xrawsec/whids/sysmon"
 	"github.com/0xrawsec/whids/utils"
 	"github.com/pelletier/go-toml"
 
@@ -172,7 +177,6 @@ type ManagerLogConfig struct {
 type ManagerConfig struct {
 	// TOML strings need to be first otherwise issue parsing back config
 	Database    string            `toml:"db" comment:"Path to store database"`
-	RulesDir    string            `toml:"rules-dir" comment:"Gene rule directory\n See: https://github.com/0xrawsec/gene-rules"`
 	DumpDir     string            `toml:"dump-dir" comment:"Directory where to dump artifacts collected on hosts"`
 	AdminAPI    AdminAPIConfig    `toml:"admin-api" comment:"Settings to configure administrative API (not supposed to be reachable by endpoints)"`
 	EndpointAPI EndpointAPIConfig `toml:"endpoint-api" comment:"Settings to configure API used by endpoints"`
@@ -238,17 +242,18 @@ type Manager struct {
 	detectionLogger   *logger.EventLogger
 	detectionSearcher *logger.EventSearcher
 	endpointAPI       *http.Server
-	endpoints         Endpoints
-	adminAPI          *http.Server
-	stop              chan bool
-	done              bool
+	//endpoints         Endpoints
+	adminAPI *http.Server
+	stop     chan bool
+	done     bool
+
 	// Gene related members
-	geneEng     *engine.Engine
-	reducer     *reducer.Reducer
-	rules       string // to cache the rules concatenated
-	rulesSha256 string // rules integrity check and update
-	//containers       map[string][]string
-	//containersSha256 map[string]string
+	gene struct {
+		engine  *engine.Engine
+		reducer *reducer.Reducer
+		rules   string // to cache the rules concatenated
+		sha256  string // rules integrity check and update
+	}
 
 	iocs *ioc.IoCs
 
@@ -259,7 +264,6 @@ type Manager struct {
 // NewManager creates a new WHIDS manager with a logfile as parameter
 func NewManager(c *ManagerConfig) (*Manager, error) {
 	var err error
-	var objects []sod.Object
 
 	m := Manager{Config: c, iocs: ioc.NewIocs()}
 	//logPath := filepath.Join(c.Logging.Root, c.Logging.LogBasename)
@@ -294,28 +298,15 @@ func NewManager(c *ManagerConfig) (*Manager, error) {
 	// initialize IoCs from db
 	m.iocs.FromDB(m.db)
 
-	// Endpoints initialization
-	m.endpoints = NewEndpoints()
-	if objects, err = m.db.All(&Endpoint{}); err != nil {
-		return nil, err
-	}
-	for _, o := range objects {
-		ept := o.(*Endpoint)
-		m.endpoints.Add(ept)
-	}
-
 	m.stop = make(chan bool)
 	if err = c.TLS.Verify(); err != nil && !c.TLS.Empty() {
 		return nil, err
 	}
 
-	// Gene engine initialization
-	if err := m.LoadGeneEngine(); err != nil {
-		return &m, fmt.Errorf("Manager cannot initialize gene engine: %s", err)
+	// Gene components initialization
+	if err := m.initializeGeneFromDB(); err != nil {
+		return &m, fmt.Errorf("manager cannot initialize gene components: %s", err)
 	}
-
-	// Gene Reducer initialization (used to generate reports)
-	m.reducer = reducer.NewReducer(m.geneEng)
 
 	// Dump Directory initialization
 	if m.Config.DumpDir != "" && !fsutil.IsDir(m.Config.DumpDir) {
@@ -328,7 +319,9 @@ func NewManager(c *ManagerConfig) (*Manager, error) {
 
 func (m *Manager) initializeDB() (err error) {
 	// Creating Endpoint table
-	if err = m.db.Create(&Endpoint{}, sod.DefaultSchema); err != nil {
+	endpointSchema := sod.DefaultSchema
+	endpointSchema.Asynchrone(100, 10*time.Second)
+	if err = m.db.Create(&Endpoint{}, endpointSchema); err != nil {
 		return
 	}
 
@@ -338,7 +331,12 @@ func (m *Manager) initializeDB() (err error) {
 	}
 
 	// Creating IOC table
-	if err = m.db.Create(&ioc.IoC{}, sod.DefaultSchema); err != nil {
+	if err = m.db.Create(&ioc.IOC{}, sod.DefaultSchema); err != nil {
+		return
+	}
+
+	// Creating Sysmon config table
+	if err = m.db.Create(&sysmon.Config{}, sod.DefaultSchema); err != nil {
 		return
 	}
 
@@ -351,6 +349,129 @@ func (m *Manager) initializeDB() (err error) {
 	archivedReportSchema.ObjectsIndex = sod.NewIndex(descriptors...)
 	if err = m.db.Create(&ArchivedReport{}, archivedReportSchema); err != nil {
 		return
+	}
+
+	rulesSchema := sod.DefaultSchema
+	rulesSchema.Extension = ".gen"
+	rulesDesc := []sod.FieldDescriptor{
+		{Name: "Name", Index: true, Constraint: sod.Constraints{Unique: true}},
+	}
+	rulesSchema.ObjectsIndex = sod.NewIndex(rulesDesc...)
+	if err = m.db.Create(&EdrRule{}, rulesSchema); err != nil {
+		return
+	}
+
+	return
+}
+
+func (m *Manager) initializeGeneFromDB() error {
+	engine := engine.NewEngine()
+	engine.SetDumpRaw(true)
+
+	reducer := reducer.NewReducer(engine)
+
+	if objs, err := m.db.All(&EdrRule{}); err != nil {
+		return err
+	} else {
+		for _, o := range objs {
+			rule := o.(*EdrRule)
+			if err := engine.LoadRule(&rule.Rule); err != nil {
+				return fmt.Errorf("fail to load rule %s: %s", rule.Name, err)
+			}
+		}
+	}
+
+	// we update gene components only if no error is met
+	m.gene.engine = engine
+	m.gene.reducer = reducer
+	m.updateRulesCache()
+
+	return nil
+
+}
+
+func (m *Manager) updateRulesCache() {
+	sha256 := sha256.New()
+	buf := new(bytes.Buffer)
+	for rr := range m.gene.engine.GetRawRule(".*") {
+		chunk := []byte(rr + "\n")
+		buf.Write(chunk)
+		sha256.Write(chunk)
+	}
+	m.gene.rules = buf.String()
+	m.gene.sha256 = hex.EncodeToString(sha256.Sum(nil))
+}
+
+// AddCommand sets a command to be executed on endpoint specified by UUID
+func (m *Manager) AddCommand(uuid string, c *Command) error {
+	if endpt, ok := m.MutEndpoint(uuid); ok {
+		endpt.Command = c
+		return m.db.InsertOrUpdate(endpt)
+	}
+	return ErrUnkEndpoint
+}
+
+// GetCommand gets the command set for an endpoint specified by UUID
+func (m *Manager) GetCommand(uuid string) (*Command, error) {
+	if endpt, ok := m.MutEndpoint(uuid); ok {
+		// We return the command of an unmutable endpoint struct
+		// so if Command is modified this will not affect Endpoint
+		return endpt.Command, nil
+	}
+	return nil, ErrUnkEndpoint
+}
+
+// MutEndpoint returns an Endpoint pointer from database
+// Result must be handled with care as any change to the Endpoint
+// might be commited to the database. If an Endpoint needs to be
+// modified but changes don't need to be commited, use Endpoint.Copy()
+// to work on a copy
+func (m *Manager) MutEndpoint(uuid string) (*Endpoint, bool) {
+	if o, err := m.db.GetByUUID(&Endpoint{}, uuid); err == nil {
+		// we return copy to endpoints not to modify cached structures
+		return o.(*Endpoint), true
+	}
+	return nil, false
+}
+
+// MutEndpoints returns a slice of Endpoint pointers from database
+// Result must be handled with care as any change to the Endpoint
+// might be commited to the database. If an Endpoint needs to be
+// modified but changes don't need to be commited, use Endpoint.Copy()
+// to work on a copy
+func (m *Manager) MutEndpoints() (endpoints []*Endpoint, err error) {
+	var all []sod.Object
+
+	if all, err = m.db.All(&Endpoint{}); err != nil {
+		return
+	}
+	endpoints = make([]*Endpoint, 0, len(all))
+	for _, o := range all {
+		// we return copy to endpoints not to modify cached structures
+		endpoints = append(endpoints, o.(*Endpoint))
+	}
+	return
+}
+
+func (m *Manager) ImportRules(directory string) (err error) {
+	engine := engine.NewEngine()
+	engine.SetDumpRaw(true)
+
+	if err = engine.LoadDirectory(directory); err != nil {
+		return
+	}
+
+	rules := make([]*EdrRule, 0, engine.Count())
+	for rr := range engine.GetRawRule(".*") {
+		rule := &EdrRule{}
+		if err = json.Unmarshal([]byte(rr), &rule); err != nil {
+			return
+		}
+		rules = append(rules, rule)
+	}
+
+	if err = m.db.InsertOrUpdateMany(sod.ToObjectSlice(rules)...); err != nil {
+		return err
 	}
 
 	return
@@ -369,35 +490,9 @@ func (m *Manager) CreateNewAdminAPIUser(user *AdminAPIUser) (err error) {
 
 }
 
-// LoadGeneEngine make the manager update the gene rules it has to serve
-func (m *Manager) LoadGeneEngine() error {
-	e := engine.NewEngine()
-	e.SetDumpRaw(true)
-	// Make the engine load rules' directory
-	if err := e.LoadDirectory(m.Config.RulesDir); err != nil {
-		return err
-	}
-	// We update the engine only if no error loading the rules
-	m.geneEng = e
-	m.updateRules()
-	return nil
-}
-
-func (m *Manager) updateRules() {
-	sha256 := sha256.New()
-	buf := new(bytes.Buffer)
-	for rr := range m.geneEng.GetRawRule(".*") {
-		chunk := []byte(rr + "\n")
-		buf.Write(chunk)
-		sha256.Write(chunk)
-	}
-	m.rules = buf.String()
-	m.rulesSha256 = hex.EncodeToString(sha256.Sum(nil))
-}
-
 // AddEndpoint adds new endpoint to the manager
 func (m *Manager) AddEndpoint(uuid, key string) {
-	m.endpoints.Add(NewEndpoint(uuid, key))
+	m.db.InsertOrUpdate(NewEndpoint(uuid, key))
 }
 
 // UpdateReducer updates the reducer member of the Manager
@@ -411,9 +506,21 @@ func (m *Manager) UpdateReducer(identifier string, e *event.EdrEvent) {
 		}
 
 		if len(sigs) > 0 {
-			m.reducer.Update(e.Timestamp(), identifier, sigs)
+			m.gene.reducer.Update(e.Timestamp(), identifier, sigs)
 		}
 	}
+}
+
+func (m *Manager) logAPIErrorf(fmt string, i ...interface{}) {
+	funcName := "unk.UnknownFunc"
+	if pc, _, _, ok := runtime.Caller(1); ok {
+		split := strings.Split(runtime.FuncForPC(pc).Name(), "/")
+		funcName = split[len(split)-1]
+	}
+
+	msg := format("%s: %s", funcName, format(fmt, i...))
+
+	log.Error(msg)
 }
 
 // Wait the Manager to Shutdown
@@ -447,6 +554,11 @@ func (m *Manager) Shutdown() (lastErr error) {
 	if err := m.eventLogger.Close(); err != nil {
 		lastErr = err
 	}
+
+	if err := m.db.Close(); err != nil {
+		lastErr = err
+	}
+
 	return
 }
 
