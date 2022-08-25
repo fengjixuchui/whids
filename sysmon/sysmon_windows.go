@@ -4,7 +4,10 @@
 package sysmon
 
 import (
+	"errors"
 	"fmt"
+	"io"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -26,57 +29,144 @@ const (
 
 var (
 	versionRe = regexp.MustCompile(
-		`(?s:System\sMonitor\s(?P<version>v\d+\.\d+)\s-[.\s].*` +
-			`<manifest schemaversion="(?P<schemaversion>\d+\.\d+)" binaryversion="(?P<binaryversion>\d+\.\d+)">)`,
+		`(?s:System\sMonitor\s(?P<version>v\d+(\.\d+)?)\s-[.\s].*` +
+			`<manifest schemaversion="(?P<schemaversion>\d+(\.\d+)?)" binaryversion="(?P<binaryversion>\d+(\.\d+)?)">)`,
 	)
+
+	DefaultTimeout = 5 * time.Second
 )
 
-func Install(image string) (err error) {
-
-	// we first uninstall existing installation
-	if err = Uninstall(); err != nil {
-		return
+func stdCmdOutput(b []byte) []byte {
+	if len(b) >= 2 {
+		// check UTF16 BOM
+		if b[1] == '\xfe' && b[0] == '\xff' {
+			b = []byte(win32.UTF16BytesToString(b))
+		}
 	}
+	return b
+}
 
-	// we run install  
-	c := command.CommandTimeout(30, image, "-accepteula", "-i")
-	defer c.Terminate()
-	if err = c.Run(); err != nil {
-		return fmt.Errorf("failed to install sysmon: %w", err)
+func Versions(image string) (version, schema, binary string, err error) {
+	var out []byte
+
+	sh := submatch.NewHelper(versionRe)
+
+	if fsutil.IsFile(image) {
+
+		c := command.CommandTimeout(
+			DefaultTimeout,
+			image,
+			"-s",
+		)
+		defer c.Terminate()
+
+		if out, err = c.CombinedOutput(); err != nil {
+			err = fmt.Errorf("failed to run sysmon schema command: %s", err)
+			return
+		}
+
+		// standardize output
+		out = stdCmdOutput(out)
+
+		sh.Prepare(out)
+		if v, err := sh.GetBytes("version"); err == nil {
+			version = string(v)
+		}
+		if sv, err := sh.GetBytes("schemaversion"); err == nil {
+			schema = string(sv)
+		}
+		if bv, err := sh.GetBytes("binaryversion"); err == nil {
+			binary = string(bv)
+		}
 	}
 
 	return
 }
 
-func Configure(config string) (err error) {
-	i := NewSysmonInfo()
+func InstallOrUpdate(image string) (err error) {
+	var out []byte
+
+	// we first uninstall existing installation
+	// if Sysmon is not installed yet we should not get any error
+	if err = Uninstall(); err != nil && !errors.Is(err, ErrSysmonNotInstalled) {
+		return
+	}
+
+	// we run install
+	c := command.CommandTimeout(DefaultTimeout, image, "-accepteula", "-i")
+	defer c.Terminate()
+	if out, err = c.CombinedOutput(); err != nil {
+		out = stdCmdOutput(out)
+		return fmt.Errorf("failed to install sysmon: %w\n%s", err, out)
+	}
+
+	return
+}
+
+func Configure(r io.Reader) (err error) {
+	var tmp, config string
+	var i *Info
+
+	// retrieve sysmon information
+	if i, err = NewSysmonInfo(); err != nil {
+		return
+	}
 
 	image := i.Service.Image
 
-	if fsutil.IsFile(image) {
-		c := command.CommandTimeout(5, image, "-c", config)
-		defer c.Terminate()
-		return c.Run()
+	if !fsutil.IsFile(image) {
+		return ErrSysmonNotInstalled
 	}
 
-	return ErrSysmonNotInstalled
+	if tmp, err = utils.HidsMkTmpDir(); err != nil {
+		return fmt.Errorf("failed to create tmp dir: %w", err)
+	}
+	// remove temporary file
+	defer os.RemoveAll(tmp)
+
+	config = filepath.Join(tmp, "sysmon.xml")
+	if err = utils.HidsWriteReader(config, r, false); err != nil {
+		return fmt.Errorf("failed to create config file: %w", err)
+	}
+
+	c := command.CommandTimeout(DefaultTimeout, image, "-c", config)
+	defer c.Terminate()
+	if err = c.Run(); err != nil {
+		return fmt.Errorf("command to configure sysmon failed: %w", err)
+	}
+
+	return
 }
 
 func Uninstall() (err error) {
-	i := NewSysmonInfo()
+	var i *Info
+	var out []byte
+
+	// retrieve sysmon information
+	if i, err = NewSysmonInfo(); err != nil {
+		return
+	}
 
 	image := i.Service.Image
 
 	//means sysmon is already installed
 	if fsutil.IsFile(image) {
 		// we uninstall it
-		c := command.CommandTimeout(60, image, "-u")
+		// force flag forces all components to uninstall
+		c := command.CommandTimeout(DefaultTimeout, image, "-u", "force")
 		defer c.Terminate()
-		if err = c.Run(); err != nil {
-			return fmt.Errorf("failed to uninstall sysmon: %w", err)
+
+		if out, err = c.CombinedOutput(); err != nil {
+			out = stdCmdOutput(out)
+			return fmt.Errorf("failed to uninstall sysmon: %w\n%s", err, string(out))
+		}
+
+		if err = os.Remove(image); err != nil {
+			return fmt.Errorf("failed to remove sysmon binary: %w", err)
 		}
 	}
 
+	// we don't return any error if Sysmon is not yet installed
 	return
 }
 
@@ -99,18 +189,27 @@ func findMatchingSysmonServiceKeys() (keys []string) {
 	return
 }
 
-func NewSysmonInfo() (i *Info) {
+func NewSysmonInfo() (i *Info, err error) {
 	var sysmonRegPath string
 
 	i = &Info{}
 
 	// validate that we find only one entry in registry
-	if keys := findMatchingSysmonServiceKeys(); len(keys) != 1 {
-		i.Err = fmt.Errorf("more than one key looking like Sysmon: %v", keys)
+	keys := findMatchingSysmonServiceKeys()
+
+	// sysmon is not installed
+	if len(keys) == 0 {
+		err = ErrSysmonNotInstalled
 		return
-	} else {
-		i.Service.Name = keys[0]
 	}
+
+	// more than one key found -> not normal
+	if len(keys) > 1 {
+		err = fmt.Errorf("more than one key looking like Sysmon: %v", keys)
+		return
+	}
+
+	i.Service.Name = keys[0]
 
 	sysmonRegPath = utils.RegJoin(servicesPath, i.Service.Name)
 	i.Service.Image = utils.RegValueToString(sysmonRegPath, "ImagePath")
@@ -123,7 +222,7 @@ func NewSysmonInfo() (i *Info) {
 	i.Config.Hash = i.ConfigHash()
 
 	// parse schema and populate version information
-	i.parseSchema()
+	err = i.parseSchema()
 
 	return
 }
@@ -162,37 +261,13 @@ func (i *Info) ConfigHash() string {
 	return hash
 }
 
-func (i *Info) parseSchema() {
-	sh := submatch.NewHelper(versionRe)
+func (i *Info) parseSchema() (err error) {
+	var version, schema, binary string
 
-	if fsutil.IsFile(i.Service.Image) {
+	version, schema, binary, err = Versions(i.Service.Image)
+	i.Version = version
+	i.Config.Version.Schema = schema
+	i.Config.Version.Binary = binary
 
-		c := command.CommandTimeout(
-			time.Second*2,
-			i.Service.Image,
-			"-s",
-		)
-		defer c.Terminate()
-
-		if out, err := c.CombinedOutput(); err == nil {
-			if len(out) >= 2 {
-				// check UTF16 BOM
-				if out[1] == '\xfe' && out[0] == '\xff' {
-					out = []byte(win32.UTF16BytesToString(out))
-				}
-			}
-			sh.Prepare(out)
-			if v, err := sh.GetBytes("version"); err == nil {
-				i.Version = string(v)
-			}
-			if sv, err := sh.GetBytes("schemaversion"); err == nil {
-				i.Config.Version.Schema = string(sv)
-			}
-			if bv, err := sh.GetBytes("binaryversion"); err == nil {
-				i.Config.Version.Binary = string(bv)
-			}
-		} else {
-			i.Err = fmt.Errorf("failed to run sysmon command: %s", err)
-		}
-	}
+	return
 }

@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/csv"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -21,6 +20,7 @@ import (
 	"github.com/0xrawsec/golang-utils/datastructs"
 	"github.com/0xrawsec/golang-utils/log"
 	"github.com/0xrawsec/whids/utils/powershell"
+	"github.com/pelletier/go-toml"
 )
 
 var (
@@ -31,20 +31,8 @@ func IsValidUUID(uuid string) bool {
 	return RegexUuid.MatchString(uuid)
 }
 
-// EnableDNSLogs through wevutil command line
-func EnableDNSLogs() error {
-	cmd := exec.Command("wevtutil.exe", "sl", "Microsoft-Windows-DNS-Client/Operational", "/e:true")
-	return cmd.Run()
-}
-
-// FlushDNSCache executes windows command to flush the DNS cache
-func FlushDNSCache() error {
-	cmd := exec.Command("ipconfig.exe", "/flushdns")
-	return cmd.Run()
-}
-
-// PrettyJson returns a JSON pretty string out of i
-func PrettyJson(i interface{}) string {
+// PrettyJsonOrPanic returns a JSON pretty string out of i
+func PrettyJsonOrPanic(i interface{}) string {
 	b, err := json.MarshalIndent(i, "", "    ")
 	if err != nil {
 		panic(err)
@@ -52,21 +40,48 @@ func PrettyJson(i interface{}) string {
 	return string(b)
 }
 
-func Json(i interface{}) []byte {
-	b, err := json.Marshal(i)
+func Json(i any) ([]byte, error) {
+	return json.Marshal(i)
+}
+
+func JsonString(i any) (s string, err error) {
+	var b []byte
+	if b, err = Json(i); err != nil {
+		return
+	}
+	s = string(b)
+	return
+}
+
+func JsonOrPanic(i interface{}) []byte {
+	b, err := Json(i)
 	if err != nil {
 		panic(err)
 	}
 	return b
 }
 
-// JsonString returns a Json string out of i
-func JsonString(i interface{}) string {
-	b, err := json.Marshal(i)
-	if err != nil {
-		panic(err)
+// JsonStringOrPanic returns a Json string out of i
+func JsonStringOrPanic(i interface{}) string {
+	return string(JsonOrPanic(i))
+}
+
+func Toml(i interface{}) (b []byte, err error) {
+	buf := new(bytes.Buffer)
+	enc := toml.NewEncoder(buf)
+	enc.Order(toml.OrderPreserve)
+	if err = enc.Encode(i); err != nil {
+		return
 	}
-	return string(b)
+	b = buf.Bytes()
+	return
+}
+
+func TomlString(i any) (s string, err error) {
+	var b []byte
+	b, err = Toml(i)
+	s = string(b)
+	return
 }
 
 // ExpandEnvs expands several strings with environment variable
@@ -88,20 +103,40 @@ func Sha256StringArray(array []string) string {
 	return hex.EncodeToString(sha256.Sum(nil))
 }
 
-// HashEventBytes return a hash from a byte slice assuming
-// the event has been JSON encoded with the json.Marshal
-func HashEventBytes(b []byte) string {
-	return data.Sha1(bytes.Trim(b, " \n\r\t"))
-}
-
-func HashStruct(i interface{}) (h string, err error) {
-	var b []byte
-
+func toBytes(i any) (b []byte, err error) {
 	if b, err = json.Marshal(i); err != nil {
 		return
 	}
 
-	return data.Sha1(bytes.Trim(b, " \n\r\t")), nil
+	b = bytes.Trim(b, " \n\r\t")
+	return
+}
+
+// HashEventBytes return a hash from a byte slice assuming
+// the event has been JSON encoded with the json.Marshal
+func Sha1EventBytes(b []byte) string {
+	return data.Sha1(bytes.Trim(b, " \n\r\t"))
+}
+
+// Sha1Interface return a sha1 hash from an interface
+func Sha1Interface(i interface{}) (h string, err error) {
+	var b []byte
+
+	if b, err = toBytes(i); err != nil {
+		return
+	}
+
+	return data.Sha1(b), nil
+}
+
+func Sha256Interface(i interface{}) (h string, err error) {
+	var b []byte
+
+	if b, err = toBytes(i); err != nil {
+		return
+	}
+
+	return data.Sha256(b), nil
 }
 
 func GetCurFuncName() string {
@@ -168,32 +203,6 @@ func (w *WindowsLogger) Close() error {
 func Round(f float64, precision int) float64 {
 	pow := math.Pow10(precision)
 	return float64(int64(f*pow)) / pow
-}
-
-// SvcFromPid returns the list of services hosted by a given PID
-// interesting to know what service is hosted by svchost
-func SvcFromPid(pid int32) string {
-	c := exec.Command("tasklist", "/SVC", "/FO", "CSV", "/NH", "/FI", fmt.Sprintf("PID eq %d", pid))
-
-	out, err := c.Output()
-	if err != nil {
-		log.Errorf("Failed to run tasklist: %s", err)
-		return "ERROR"
-	}
-
-	r := csv.NewReader(bytes.NewBuffer(out))
-	rec, err := r.Read()
-	if err != nil {
-		log.Errorf("Failed to read tasklist output: %s", err)
-		return "ERROR"
-	}
-
-	// Expect three fields
-	if len(rec) == 3 {
-		return rec[2]
-	}
-	log.Errorf("Unexpected tasklist output: %s", out)
-	return "ERROR"
 }
 
 // RegQuery issues a reg query command to dump registry

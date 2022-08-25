@@ -10,7 +10,7 @@ import (
 
 	"github.com/0xrawsec/golang-utils/crypto/data"
 	"github.com/0xrawsec/sod"
-	"github.com/0xrawsec/whids/os"
+	"github.com/0xrawsec/whids/los"
 )
 
 var (
@@ -92,7 +92,7 @@ func (f *Filters) Validate() error {
 		method := evtFilter.MethodByName("Validate")
 		res := method.Call([]reflect.Value{})
 		if !res[0].IsNil() {
-			return fmt.Errorf("%s %s", filterName, res[0].Interface().(error))
+			return fmt.Errorf("%s %w", filterName, res[0].Interface().(error))
 		}
 
 		evtFilter = evtFilter.Elem()
@@ -130,17 +130,17 @@ type EventFiltering struct {
 	RuleGroup []RuleGroup
 }
 
-type innerConfig struct {
-	XMLName                xml.Name `xml:"Sysmon" json:"-"`
-	SchemaVersion          string   `xml:"schemaversion,attr" json:"schemaversion"`
-	ArchiveDirectory       string   `xml:",omitempty" json:",omitempty"`
-	CheckRevocation        bool
-	CopyOnDeletePE         bool
+type InnerConfig struct {
+	XMLName                xml.Name  `xml:"Sysmon" json:"-"`
+	SchemaVersion          string    `xml:"schemaversion,attr" json:"schemaversion"`
+	ArchiveDirectory       string    `xml:",omitempty" json:",omitempty"`
+	CheckRevocation        bool      `xml:",omitempty"`
+	CopyOnDeletePE         bool      `xml:",omitempty"`
 	CopyOnDeleteSIDs       csstrings `xml:",omitempty" json:",omitempty"`
 	CopyOnDeleteExtensions csstrings `xml:",omitempty" json:",omitempty"`
 	CopyOnDeleteProcesses  csstrings `xml:",omitempty" json:",omitempty"`
 	DriverName             string    `xml:",omitempty" json:",omitempty"`
-	DnsLookup              bool
+	DnsLookup              bool      `xml:",omitempty"`
 	HashAlgorithms         csstrings `xml:",omitempty" json:",omitempty"`
 	EventFiltering         EventFiltering
 	// Don't validate Sysmon XML DTD
@@ -150,14 +150,14 @@ type innerConfig struct {
 
 type Config struct {
 	sod.Item
-	innerConfig
+	InnerConfig
 }
 
 func (c Config) MarshalJSON() (b []byte, err error) {
 	if c.XmlSha256, err = c.Sha256(); err != nil {
 		return
 	}
-	return json.MarshalIndent(c.innerConfig, "", "  ")
+	return json.MarshalIndent(c.InnerConfig, "", "  ")
 }
 
 func (c *Config) Validate() (err error) {
@@ -165,7 +165,7 @@ func (c *Config) Validate() (err error) {
 		return fmt.Errorf("%w %s", ErrInvalidSchemaVersion, c.SchemaVersion)
 	}
 
-	if !os.IsKnownOS(c.OS) {
+	if !los.IsKnownOS(c.OS) {
 		return fmt.Errorf("%w %s", ErrUnknownOS, c.OS)
 	}
 

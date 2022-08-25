@@ -72,9 +72,10 @@
                       "group": "",
                       "hostname": "OpenHappy",
                       "ip": "127.0.0.1",
-                      "key": "Td5Pscqc1geRMYlqVaW8xpt8tlVeODNFMJrugyenPk37V6QVCH8HlKd3XjRjXr1z",
-                      "last-connection": "2022-03-04T13:20:12.009372983Z",
-                      "last-detection": "2022-03-04T14:20:10.935434116+01:00",
+                      "key": "gCx59uTlWsW9a4MX2yJOEN4NSCln3TOu58aTXJcbii5fSRvR34kmyBhN6JfbiJyw",
+                      "last-connection": "2022-08-24T10:48:29.474420629Z",
+                      "last-detection": "2022-08-24T12:48:28.433692184+02:00",
+                      "last-event": "2022-08-24T12:48:28.433692184+02:00",
                       "score": 0,
                       "status": "",
                       "system-info": {
@@ -86,6 +87,11 @@
                           "count": 4,
                           "name": "Intel(R) Core(TM) i7-8565U CPU @ 1.80GHz"
                         },
+                        "edr": {
+                          "commit": "deadbeeeeeeeeeeeeeeeeef",
+                          "version": "major.minor.patch"
+                        },
+                        "error": null,
                         "os": {
                           "build": "18362",
                           "edition": "Enterprise",
@@ -146,12 +152,13 @@
                     "group": "",
                     "hostname": "",
                     "ip": "",
-                    "key": "wKx06x5HRbqNR6yv2PE09yjFOJNgEOTBYqqHhaekePEBVYT2eChcsQ7fWVLSvzWz",
+                    "key": "8vDtCLSXvKqycbzcNj5j1lYvn0l2FmBz2YIg1WpYB6FwUSR50KDsgJxfQK6KQth3",
                     "last-connection": "0001-01-01T00:00:00Z",
                     "last-detection": "0001-01-01T00:00:00Z",
+                    "last-event": "0001-01-01T00:00:00Z",
                     "score": 0,
                     "status": "",
-                    "uuid": "5e26acb9-d863-bdab-52ef-11327b7c7b56"
+                    "uuid": "1b98404b-b614-c91a-f351-4f8b4216838d"
                   },
                   "error": "",
                   "message": "OK"
@@ -191,21 +198,21 @@
                     "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d": [
                       {
                         "base-url": "/endpoints/5a92baeb-9384-47d3-92b4-a0db6f9b8c6d/artifacts/5a92baeb-9384-47d3-92b4-a0db6f9b8c6d/3d8441643c204ba9b9dcb5c414b25a3129f66f6c/",
-                        "creation": "2022-03-04T13:20:15.421761012Z",
+                        "creation": "2022-08-24T10:48:34.904939052Z",
                         "event-hash": "3d8441643c204ba9b9dcb5c414b25a3129f66f6c",
                         "files": [
                           {
                             "name": "bar.txt",
                             "size": 4,
-                            "timestamp": "2022-03-04T13:20:15.43509437Z"
+                            "timestamp": "2022-08-24T10:48:34.904939052Z"
                           },
                           {
                             "name": "foo.txt",
                             "size": 4,
-                            "timestamp": "2022-03-04T13:20:15.421761012Z"
+                            "timestamp": "2022-08-24T10:48:34.904939052Z"
                           }
                         ],
-                        "modification": "2022-03-04T13:20:15.43509437Z",
+                        "modification": "2022-08-24T10:48:34.904939052Z",
                         "process-guid": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d"
                       }
                     ]
@@ -239,15 +246,15 @@
                       "avg-signature-criticality": 0,
                       "bounded-score": 0,
                       "count-by-signature": {
-                        "DefenderConfigChanged": 3,
-                        "NewAutorun": 17,
-                        "SuspiciousService": 4,
-                        "UnknownServices": 8,
-                        "UntrustedDriverLoaded": 18
+                        "DefenderConfigChanged": 4,
+                        "NewAutorun": 19,
+                        "SuspiciousService": 5,
+                        "UnknownServices": 9,
+                        "UntrustedDriverLoaded": 13
                       },
                       "count-uniq-signatures": 5,
                       "identifier": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d",
-                      "median-time": "2022-03-04T14:20:13.218428238+01:00",
+                      "median-time": "2022-08-24T12:48:32.709584161+02:00",
                       "score": 0,
                       "signature-count": 50,
                       "signature-criticality-metric": 0,
@@ -255,14 +262,14 @@
                       "signatures": [
                         "UntrustedDriverLoaded",
                         "NewAutorun",
+                        "UnknownServices",
                         "DefenderConfigChanged",
-                        "SuspiciousService",
-                        "UnknownServices"
+                        "SuspiciousService"
                       ],
-                      "start-time": "2022-03-04T14:20:13.216631809+01:00",
+                      "start-time": "2022-08-24T12:48:32.708425432+02:00",
                       "std-dev-alert-criticality": 0,
                       "std-dev-signature-criticality": -92233720368547760,
-                      "stop-time": "2022-03-04T14:20:13.220224668+01:00",
+                      "stop-time": "2022-08-24T12:48:32.71074289+02:00",
                       "sum-alert-criticality": 0,
                       "sum-rule-criticality": 0,
                       "tactics": null,
@@ -278,12 +285,366 @@
         }
       }
     },
+    "/endpoints/{os}/osqueryi/binary": {
+      "get": {
+        "tags": [
+          "Manage OSQueryi installation"
+        ],
+        "summary": "Get information about OSQueryi binary",
+        "parameters": [
+          {
+            "name": "os",
+            "in": "path",
+            "description": "os path parameter",
+            "required": true,
+            "allowEmptyValue": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "binary",
+            "in": "query",
+            "description": "Show binary in response",
+            "required": false,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTTP 200 response",
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": {
+                    "alias": "osqueryi",
+                    "binary": "TVpmb29iYXI=",
+                    "metadata": {
+                      "md5": "6d6b9b955abe00ae042be6c0090e3c47",
+                      "sha1": "9cc75cdbefa6d4490db401c9b0dc6398c7fb2a39",
+                      "sha256": "31b7bcfda3653f68213fd59b33fdcda5bf9513c31f0adde1c75beaaa31e0f44b",
+                      "sha512": "1d23010c1687f3d96a3762767f17b7e14a4b1da7aaa56c4fb0a046d59738fc27417f7ddd9409279f9e8765ed9d7229e19f1ec628a8ccfcafe586dcd161585438"
+                    },
+                    "name": "osqueryi",
+                    "os": "windows",
+                    "uuid": "2010ab6c-4bba-a535-8720-2d66feef4e90"
+                  },
+                  "error": "",
+                  "message": "OK"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Manage OSQueryi installation"
+        ],
+        "summary": "Add or update OSQueryi binary to deploy on endpoints",
+        "parameters": [
+          {
+            "name": "os",
+            "in": "path",
+            "description": "os path parameter",
+            "required": true,
+            "allowEmptyValue": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "binary",
+            "in": "query",
+            "description": "Show binary in response",
+            "required": false,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "OSQueryi binary to deploy",
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              },
+              "example": "TVpmb29iYXI="
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "HTTP 200 response",
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": {
+                    "alias": "osqueryi",
+                    "binary": "TVpmb29iYXI=",
+                    "metadata": {
+                      "md5": "6d6b9b955abe00ae042be6c0090e3c47",
+                      "sha1": "9cc75cdbefa6d4490db401c9b0dc6398c7fb2a39",
+                      "sha256": "31b7bcfda3653f68213fd59b33fdcda5bf9513c31f0adde1c75beaaa31e0f44b",
+                      "sha512": "1d23010c1687f3d96a3762767f17b7e14a4b1da7aaa56c4fb0a046d59738fc27417f7ddd9409279f9e8765ed9d7229e19f1ec628a8ccfcafe586dcd161585438"
+                    },
+                    "name": "osqueryi",
+                    "os": "windows",
+                    "uuid": "2010ab6c-4bba-a535-8720-2d66feef4e90"
+                  },
+                  "error": "",
+                  "message": "OK"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Manage OSQueryi installation"
+        ],
+        "summary": "Delete OSQueryi binary from manager and connected endpoints",
+        "parameters": [
+          {
+            "name": "os",
+            "in": "path",
+            "description": "os path parameter",
+            "required": true,
+            "allowEmptyValue": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "binary",
+            "in": "query",
+            "description": "Show binary in response",
+            "required": false,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTTP 200 response",
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": {
+                    "alias": "osqueryi",
+                    "binary": "TVpmb29iYXI=",
+                    "metadata": {
+                      "md5": "6d6b9b955abe00ae042be6c0090e3c47",
+                      "sha1": "9cc75cdbefa6d4490db401c9b0dc6398c7fb2a39",
+                      "sha256": "31b7bcfda3653f68213fd59b33fdcda5bf9513c31f0adde1c75beaaa31e0f44b",
+                      "sha512": "1d23010c1687f3d96a3762767f17b7e14a4b1da7aaa56c4fb0a046d59738fc27417f7ddd9409279f9e8765ed9d7229e19f1ec628a8ccfcafe586dcd161585438"
+                    },
+                    "name": "osqueryi",
+                    "os": "windows",
+                    "uuid": "2010ab6c-4bba-a535-8720-2d66feef4e90"
+                  },
+                  "error": "",
+                  "message": "OK"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/endpoints/{os}/sysmon/binary": {
+      "get": {
+        "tags": [
+          "Manage Sysmon"
+        ],
+        "summary": "Get information about Sysmon binary",
+        "parameters": [
+          {
+            "name": "os",
+            "in": "path",
+            "description": "os path parameter",
+            "required": true,
+            "allowEmptyValue": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "binary",
+            "in": "query",
+            "description": "Show binary in response",
+            "required": false,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTTP 200 response",
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": {
+                    "alias": "sysmon",
+                    "binary": "TVpmb29iYXI=",
+                    "metadata": {
+                      "md5": "6d6b9b955abe00ae042be6c0090e3c47",
+                      "sha1": "9cc75cdbefa6d4490db401c9b0dc6398c7fb2a39",
+                      "sha256": "31b7bcfda3653f68213fd59b33fdcda5bf9513c31f0adde1c75beaaa31e0f44b",
+                      "sha512": "1d23010c1687f3d96a3762767f17b7e14a4b1da7aaa56c4fb0a046d59738fc27417f7ddd9409279f9e8765ed9d7229e19f1ec628a8ccfcafe586dcd161585438"
+                    },
+                    "name": "sysmon",
+                    "os": "windows",
+                    "uuid": "c4c0a5ef-ada8-8f80-ff6c-928e70c925c2"
+                  },
+                  "error": "",
+                  "message": "OK"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Manage Sysmon"
+        ],
+        "summary": "Add or update Sysmon binary to deploy on connected endpoints",
+        "parameters": [
+          {
+            "name": "os",
+            "in": "path",
+            "description": "os path parameter",
+            "required": true,
+            "allowEmptyValue": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "binary",
+            "in": "query",
+            "description": "Show binary in response",
+            "required": false,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Sysmon binary to deploy",
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              },
+              "example": "TVpmb29iYXI="
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "HTTP 200 response",
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": {
+                    "alias": "sysmon",
+                    "binary": "TVpmb29iYXI=",
+                    "metadata": {
+                      "md5": "6d6b9b955abe00ae042be6c0090e3c47",
+                      "sha1": "9cc75cdbefa6d4490db401c9b0dc6398c7fb2a39",
+                      "sha256": "31b7bcfda3653f68213fd59b33fdcda5bf9513c31f0adde1c75beaaa31e0f44b",
+                      "sha512": "1d23010c1687f3d96a3762767f17b7e14a4b1da7aaa56c4fb0a046d59738fc27417f7ddd9409279f9e8765ed9d7229e19f1ec628a8ccfcafe586dcd161585438"
+                    },
+                    "name": "sysmon",
+                    "os": "windows",
+                    "uuid": "c4c0a5ef-ada8-8f80-ff6c-928e70c925c2"
+                  },
+                  "error": "",
+                  "message": "OK"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Manage Sysmon"
+        ],
+        "summary": "Delete Sysmon binary from manager and connected endpoints",
+        "parameters": [
+          {
+            "name": "os",
+            "in": "path",
+            "description": "os path parameter",
+            "required": true,
+            "allowEmptyValue": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "binary",
+            "in": "query",
+            "description": "Show binary in response",
+            "required": false,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTTP 200 response",
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": {
+                    "alias": "sysmon",
+                    "binary": "TVpmb29iYXI=",
+                    "metadata": {
+                      "md5": "6d6b9b955abe00ae042be6c0090e3c47",
+                      "sha1": "9cc75cdbefa6d4490db401c9b0dc6398c7fb2a39",
+                      "sha256": "31b7bcfda3653f68213fd59b33fdcda5bf9513c31f0adde1c75beaaa31e0f44b",
+                      "sha512": "1d23010c1687f3d96a3762767f17b7e14a4b1da7aaa56c4fb0a046d59738fc27417f7ddd9409279f9e8765ed9d7229e19f1ec628a8ccfcafe586dcd161585438"
+                    },
+                    "name": "sysmon",
+                    "os": "windows",
+                    "uuid": "c4c0a5ef-ada8-8f80-ff6c-928e70c925c2"
+                  },
+                  "error": "",
+                  "message": "OK"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/endpoints/{os}/sysmon/config": {
       "get": {
         "tags": [
-          "Manage sysmon configuration"
+          "Manage Sysmon"
         ],
-        "summary": "Get a sysmon configuration",
+        "summary": "Get a Sysmon configuration",
         "parameters": [
           {
             "name": "os",
@@ -499,7 +860,7 @@
                       "*"
                     ],
                     "OS": "windows",
-                    "XmlSha256": "9a7261a6bb857d35dbc1d9cb810692304a528316d0b82bcced3aa17955e71b1b",
+                    "XmlSha256": "a939006f3ccb8862411bb67a73976e35a61149d4c65952c7d3b588e7015dd7f4",
                     "schemaversion": "4.70"
                   },
                   "error": "",
@@ -512,9 +873,9 @@
       },
       "post": {
         "tags": [
-          "Manage sysmon configuration"
+          "Manage Sysmon"
         ],
-        "summary": "Add or update a sysmon configuration",
+        "summary": "Add or update a Sysmon configuration",
         "parameters": [
           {
             "name": "os",
@@ -544,6 +905,392 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "InnerConfig": {
+                    "type": "object",
+                    "properties": {
+                      "": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "EventFiltering": {
+                        "type": "object",
+                        "properties": {
+                          "Filters": {
+                            "type": "object",
+                            "properties": {
+                              "": {
+                                "type": "object",
+                                "properties": {
+                                  "EventFilter": {
+                                    "type": "object",
+                                    "properties": {
+                                      "onmatch": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  "Hashes": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "": {
+                                          "type": "string"
+                                        },
+                                        "condition": {
+                                          "type": "string"
+                                        },
+                                        "name": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "Image": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "": {
+                                          "type": "string"
+                                        },
+                                        "condition": {
+                                          "type": "string"
+                                        },
+                                        "name": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "IsExecutable": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "": {
+                                          "type": "string"
+                                        },
+                                        "condition": {
+                                          "type": "string"
+                                        },
+                                        "name": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "ProcessGuid": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "": {
+                                          "type": "string"
+                                        },
+                                        "condition": {
+                                          "type": "string"
+                                        },
+                                        "name": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "ProcessId": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "": {
+                                          "type": "string"
+                                        },
+                                        "condition": {
+                                          "type": "string"
+                                        },
+                                        "name": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "RuleName": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "": {
+                                          "type": "string"
+                                        },
+                                        "condition": {
+                                          "type": "string"
+                                        },
+                                        "name": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "TargetFilename": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "": {
+                                          "type": "string"
+                                        },
+                                        "condition": {
+                                          "type": "string"
+                                        },
+                                        "name": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "User": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "": {
+                                          "type": "string"
+                                        },
+                                        "condition": {
+                                          "type": "string"
+                                        },
+                                        "name": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "UtcTime": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "": {
+                                          "type": "string"
+                                        },
+                                        "condition": {
+                                          "type": "string"
+                                        },
+                                        "name": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "RuleGroup": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "Filters": {
+                                  "type": "object",
+                                  "properties": {
+                                    "": {
+                                      "type": "object",
+                                      "properties": {
+                                        "EventFilter": {
+                                          "type": "object",
+                                          "properties": {
+                                            "onmatch": {
+                                              "type": "string"
+                                            }
+                                          }
+                                        },
+                                        "Hashes": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "": {
+                                                "type": "string"
+                                              },
+                                              "condition": {
+                                                "type": "string"
+                                              },
+                                              "name": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "Image": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "": {
+                                                "type": "string"
+                                              },
+                                              "condition": {
+                                                "type": "string"
+                                              },
+                                              "name": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "IsExecutable": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "": {
+                                                "type": "string"
+                                              },
+                                              "condition": {
+                                                "type": "string"
+                                              },
+                                              "name": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "ProcessGuid": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "": {
+                                                "type": "string"
+                                              },
+                                              "condition": {
+                                                "type": "string"
+                                              },
+                                              "name": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "ProcessId": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "": {
+                                                "type": "string"
+                                              },
+                                              "condition": {
+                                                "type": "string"
+                                              },
+                                              "name": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "RuleName": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "": {
+                                                "type": "string"
+                                              },
+                                              "condition": {
+                                                "type": "string"
+                                              },
+                                              "name": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "TargetFilename": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "": {
+                                                "type": "string"
+                                              },
+                                              "condition": {
+                                                "type": "string"
+                                              },
+                                              "name": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "User": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "": {
+                                                "type": "string"
+                                              },
+                                              "condition": {
+                                                "type": "string"
+                                              },
+                                              "name": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        },
+                                        "UtcTime": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "": {
+                                                "type": "string"
+                                              },
+                                              "condition": {
+                                                "type": "string"
+                                              },
+                                              "name": {
+                                                "type": "string"
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "groupRelation": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "Sysmon": {
+                        "type": "object",
+                        "properties": {
+                          "Local": {
+                            "type": "string"
+                          },
+                          "Space": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "schemaversion": {
+                        "type": "string"
+                      }
+                    }
+                  },
                   "Item": {
                     "type": "object"
                   }
@@ -716,7 +1463,7 @@
                     }
                   ]
                 },
-                "XmlSha256": "9a7261a6bb857d35dbc1d9cb810692304a528316d0b82bcced3aa17955e71b1b",
+                "XmlSha256": "a939006f3ccb8862411bb67a73976e35a61149d4c65952c7d3b588e7015dd7f4",
                 "OS": "windows"
               }
             }
@@ -896,7 +1643,7 @@
                       "*"
                     ],
                     "OS": "windows",
-                    "XmlSha256": "9a7261a6bb857d35dbc1d9cb810692304a528316d0b82bcced3aa17955e71b1b",
+                    "XmlSha256": "a939006f3ccb8862411bb67a73976e35a61149d4c65952c7d3b588e7015dd7f4",
                     "schemaversion": "4.70"
                   },
                   "error": "",
@@ -909,9 +1656,9 @@
       },
       "delete": {
         "tags": [
-          "Manage sysmon configuration"
+          "Manage Sysmon"
         ],
-        "summary": "Delete a sysmon configuration",
+        "summary": "Delete a Sysmon configuration",
         "parameters": [
           {
             "name": "os",
@@ -1107,7 +1854,7 @@
                       "*"
                     ],
                     "OS": "windows",
-                    "XmlSha256": "9a7261a6bb857d35dbc1d9cb810692304a528316d0b82bcced3aa17955e71b1b",
+                    "XmlSha256": "a939006f3ccb8862411bb67a73976e35a61149d4c65952c7d3b588e7015dd7f4",
                     "schemaversion": "4.70"
                   },
                   "error": "",
@@ -1148,8 +1895,9 @@
                     "group": "",
                     "hostname": "OpenHappy",
                     "ip": "127.0.0.1",
-                    "last-connection": "2022-03-04T13:20:12.009372983Z",
-                    "last-detection": "2022-03-04T14:20:10.935434116+01:00",
+                    "last-connection": "2022-08-24T10:48:29.474420629Z",
+                    "last-detection": "2022-08-24T12:48:28.433692184+02:00",
+                    "last-event": "2022-08-24T12:48:28.433692184+02:00",
                     "score": 0,
                     "status": "",
                     "system-info": {
@@ -1161,6 +1909,11 @@
                         "count": 4,
                         "name": "Intel(R) Core(TM) i7-8565U CPU @ 1.80GHz"
                       },
+                      "edr": {
+                        "commit": "deadbeeeeeeeeeeeeeeeeef",
+                        "version": "major.minor.patch"
+                      },
+                      "error": null,
                       "os": {
                         "build": "18362",
                         "edition": "Enterprise",
@@ -1345,6 +2098,318 @@
                       }
                     }
                   },
+                  "config": {
+                    "type": "object",
+                    "properties": {
+                      "actions": {
+                        "type": "object",
+                        "properties": {
+                          "available-actions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "critical": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "high": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "low": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "medium": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "audit": {
+                        "type": "object",
+                        "properties": {
+                          "audit-dirs": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "audit-policies": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "enable": {
+                            "type": "boolean"
+                          }
+                        }
+                      },
+                      "canaries": {
+                        "type": "object",
+                        "properties": {
+                          "actions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "enable": {
+                            "type": "boolean"
+                          },
+                          "group": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "delete": {
+                                  "type": "boolean"
+                                },
+                                "directories": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "files": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "hide-dirs": {
+                                  "type": "boolean"
+                                },
+                                "hide-files": {
+                                  "type": "boolean"
+                                },
+                                "set-audit-acl": {
+                                  "type": "boolean"
+                                }
+                              }
+                            }
+                          },
+                          "whitelist": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "criticality-treshold": {
+                        "type": "integer",
+                        "format": "int64"
+                      },
+                      "db-path": {
+                        "type": "string"
+                      },
+                      "dump": {
+                        "type": "object",
+                        "properties": {
+                          "compression": {
+                            "type": "boolean"
+                          },
+                          "dir": {
+                            "type": "string"
+                          },
+                          "dump-untracked": {
+                            "type": "boolean"
+                          },
+                          "max-dumps": {
+                            "type": "integer",
+                            "format": "int64"
+                          }
+                        }
+                      },
+                      "en-filters": {
+                        "type": "boolean"
+                      },
+                      "en-hooks": {
+                        "type": "boolean"
+                      },
+                      "endpoint": {
+                        "type": "boolean"
+                      },
+                      "etw": {
+                        "type": "object",
+                        "properties": {
+                          "providers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "traces": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "forwarder": {
+                        "type": "object",
+                        "properties": {
+                          "local": {
+                            "type": "boolean"
+                          },
+                          "logging": {
+                            "type": "object",
+                            "properties": {
+                              "dir": {
+                                "type": "string"
+                              },
+                              "rotation-interval": {
+                                "type": "object"
+                              }
+                            }
+                          },
+                          "manager": {
+                            "type": "object",
+                            "properties": {
+                              "endpoint-key": {
+                                "type": "string"
+                              },
+                              "endpoint-uuid": {
+                                "type": "string"
+                              },
+                              "host": {
+                                "type": "string"
+                              },
+                              "max-upload-size": {
+                                "type": "integer",
+                                "format": "int64"
+                              },
+                              "port": {
+                                "type": "integer",
+                                "format": "int64"
+                              },
+                              "proto": {
+                                "type": "string"
+                              },
+                              "server-fingerprint": {
+                                "type": "string"
+                              },
+                              "server-key": {
+                                "type": "string"
+                              },
+                              "unsafe": {
+                                "type": "boolean"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "log-all": {
+                        "type": "boolean"
+                      },
+                      "logfile": {
+                        "type": "string"
+                      },
+                      "report": {
+                        "type": "object",
+                        "properties": {
+                          "commands": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "args": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "description": {
+                                  "type": "string"
+                                },
+                                "error": {
+                                  "type": "string"
+                                },
+                                "expect-json": {
+                                  "type": "boolean"
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "stderr": {
+                                  "type": "string",
+                                  "format": "binary"
+                                },
+                                "stdout": {
+                                  "type": "object"
+                                },
+                                "timeout": {
+                                  "type": "object"
+                                },
+                                "timestamp": {
+                                  "type": "string",
+                                  "format": "date"
+                                }
+                              }
+                            }
+                          },
+                          "en-reporting": {
+                            "type": "boolean"
+                          },
+                          "osquery": {
+                            "type": "object",
+                            "properties": {
+                              "tables": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          },
+                          "timeout": {
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "rules": {
+                        "type": "object",
+                        "properties": {
+                          "containers-db": {
+                            "type": "string"
+                          },
+                          "rules-db": {
+                            "type": "string"
+                          },
+                          "update-interval": {
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "sysmon": {
+                        "type": "object",
+                        "properties": {
+                          "archive-directory": {
+                            "type": "string"
+                          },
+                          "bin": {
+                            "type": "string"
+                          },
+                          "clean-archived": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    }
+                  },
                   "criticality": {
                     "type": "integer",
                     "format": "int64"
@@ -1366,6 +2431,10 @@
                     "format": "date"
                   },
                   "last-detection": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "last-event": {
                     "type": "string",
                     "format": "date"
                   },
@@ -1401,6 +2470,20 @@
                             "type": "string"
                           }
                         }
+                      },
+                      "edr": {
+                        "type": "object",
+                        "properties": {
+                          "commit": {
+                            "type": "string"
+                          },
+                          "version": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "error": {
+                        "type": "object"
                       },
                       "os": {
                         "type": "object",
@@ -1458,9 +2541,6 @@
                               }
                             }
                           },
-                          "error": {
-                            "type": "object"
-                          },
                           "service": {
                             "type": "object",
                             "properties": {
@@ -1510,6 +2590,7 @@
                 "key": "New Key",
                 "score": 0,
                 "status": "New Status",
+                "last-event": "0001-01-01T00:00:00Z",
                 "last-detection": "0001-01-01T00:00:00Z",
                 "last-connection": "0001-01-01T00:00:00Z"
               }
@@ -1528,8 +2609,9 @@
                     "group": "New Group",
                     "hostname": "OpenHappy",
                     "ip": "127.0.0.1",
-                    "last-connection": "2022-03-04T13:20:12.009372983Z",
-                    "last-detection": "2022-03-04T14:20:10.935434116+01:00",
+                    "last-connection": "2022-08-24T10:48:29.474420629Z",
+                    "last-detection": "2022-08-24T12:48:28.433692184+02:00",
+                    "last-event": "2022-08-24T12:48:28.433692184+02:00",
                     "score": 0,
                     "status": "New Status",
                     "system-info": {
@@ -1541,6 +2623,11 @@
                         "count": 4,
                         "name": "Intel(R) Core(TM) i7-8565U CPU @ 1.80GHz"
                       },
+                      "edr": {
+                        "commit": "deadbeeeeeeeeeeeeeeeeef",
+                        "version": "major.minor.patch"
+                      },
+                      "error": null,
                       "os": {
                         "build": "18362",
                         "edition": "Enterprise",
@@ -1612,8 +2699,9 @@
                     "group": "New Group",
                     "hostname": "OpenHappy",
                     "ip": "127.0.0.1",
-                    "last-connection": "2022-03-04T13:20:12.009372983Z",
-                    "last-detection": "2022-03-04T14:20:10.935434116+01:00",
+                    "last-connection": "2022-08-24T10:48:29.474420629Z",
+                    "last-detection": "2022-08-24T12:48:28.433692184+02:00",
+                    "last-event": "2022-08-24T12:48:28.433692184+02:00",
                     "score": 0,
                     "status": "New Status",
                     "system-info": {
@@ -1625,6 +2713,11 @@
                         "count": 4,
                         "name": "Intel(R) Core(TM) i7-8565U CPU @ 1.80GHz"
                       },
+                      "edr": {
+                        "commit": "deadbeeeeeeeeeeeeeeeeef",
+                        "version": "major.minor.patch"
+                      },
+                      "error": null,
                       "os": {
                         "build": "18362",
                         "edition": "Enterprise",
@@ -1707,21 +2800,21 @@
                   "data": [
                     {
                       "base-url": "/endpoints/5a92baeb-9384-47d3-92b4-a0db6f9b8c6d/artifacts/5a92baeb-9384-47d3-92b4-a0db6f9b8c6d/3d8441643c204ba9b9dcb5c414b25a3129f66f6c/",
-                      "creation": "2022-03-04T13:20:15.421761012Z",
+                      "creation": "2022-08-24T10:48:34.904939052Z",
                       "event-hash": "3d8441643c204ba9b9dcb5c414b25a3129f66f6c",
                       "files": [
                         {
                           "name": "bar.txt",
                           "size": 4,
-                          "timestamp": "2022-03-04T13:20:15.43509437Z"
+                          "timestamp": "2022-08-24T10:48:34.904939052Z"
                         },
                         {
                           "name": "foo.txt",
                           "size": 4,
-                          "timestamp": "2022-03-04T13:20:15.421761012Z"
+                          "timestamp": "2022-08-24T10:48:34.904939052Z"
                         }
                       ],
-                      "modification": "2022-03-04T13:20:15.43509437Z",
+                      "modification": "2022-08-24T10:48:34.904939052Z",
                       "process-guid": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d"
                     }
                   ],
@@ -1821,7 +2914,7 @@
     "/endpoints/{uuid}/command": {
       "get": {
         "tags": [
-          "Endpoint Execution"
+          "Endpoint Command Execution"
         ],
         "summary": "Get the result of a command executed on endpoint",
         "parameters": [
@@ -1866,11 +2959,11 @@
                     "json": null,
                     "name": "/usr/bin/printf",
                     "sent": true,
-                    "sent-time": "2022-03-04T14:20:13.131214991+01:00",
+                    "sent-time": "2022-08-24T12:48:32.653944225+02:00",
                     "stderr": null,
                     "stdout": "SGVsbG8gV29ybGQ=",
                     "timeout": 0,
-                    "uuid": "298cac85-c3a2-3462-1c8e-776ce9faff8a"
+                    "uuid": "d8f859cb-a5a6-f547-9e80-ae30ddfc3ef7"
                   },
                   "error": "",
                   "message": "OK"
@@ -1882,7 +2975,7 @@
       },
       "post": {
         "tags": [
-          "Endpoint Execution"
+          "Endpoint Command Execution"
         ],
         "summary": "Send a command to be executed by the endpoint",
         "parameters": [
@@ -1898,7 +2991,7 @@
           }
         ],
         "requestBody": {
-          "description": "Command to be executed. One can also specify files \n\t\t\t\tto drop from the manager to the endpoint prior to command execution \n\t\t\t\tand files to fetch after execution. A timeout for the can also \n\t\t\t\tbe specified, if zero there will be no timeout.",
+          "description": "Command to be executed. One can also specify files \n\t\t\t\tto drop from the manager to the endpoint prior to command execution \n\t\t\t\tand files to fetch after execution. A timeout for the can also \n\t\t\t\tbe specified, if zero there will be no timeout. For a full list of \n\t\t\t\tavailable EDR specific commands check [documentation](https://github.com/0xrawsec/whids/blob/master/doc/edr-commands.md).",
           "content": {
             "application/json": {
               "schema": {
@@ -1958,15 +3051,16 @@
                       "stderr": null,
                       "stdout": null,
                       "timeout": 0,
-                      "uuid": "298cac85-c3a2-3462-1c8e-776ce9faff8a"
+                      "uuid": "d8f859cb-a5a6-f547-9e80-ae30ddfc3ef7"
                     },
                     "criticality": 0,
                     "group": "",
                     "hostname": "OpenHappy",
                     "ip": "127.0.0.1",
-                    "key": "x72LGV0LJu6wSrOFescJzifFz0i1s1cRyVU77a5gIRvLyVjRCJ4LKlfSb75ReXgb",
-                    "last-connection": "2022-03-04T13:20:13.119733597Z",
-                    "last-detection": "2022-03-04T14:20:12.069336163+01:00",
+                    "key": "CR7kBoCE8iNvFnbp7emRyNYMF2Ih9POtzNHkOC6iUsNURhR64NfUS22mESgBlFYr",
+                    "last-connection": "2022-08-24T10:48:31.650949593Z",
+                    "last-detection": "2022-08-24T12:48:30.602528676+02:00",
+                    "last-event": "2022-08-24T12:48:30.602528676+02:00",
                     "score": 0,
                     "status": "",
                     "system-info": {
@@ -1978,6 +3072,11 @@
                         "count": 4,
                         "name": "Intel(R) Core(TM) i7-8565U CPU @ 1.80GHz"
                       },
+                      "edr": {
+                        "commit": "deadbeeeeeeeeeeeeeeeeef",
+                        "version": "major.minor.patch"
+                      },
+                      "error": null,
                       "os": {
                         "build": "18362",
                         "edition": "Enterprise",
@@ -2025,7 +3124,7 @@
     "/endpoints/{uuid}/command/{field}": {
       "get": {
         "tags": [
-          "Endpoint Execution"
+          "Endpoint Command Execution"
         ],
         "summary": "Retrieve only a field of the command structure",
         "parameters": [
@@ -2067,6 +3166,671 @@
               "application/json": {
                 "example": {
                   "data": "SGVsbG8gV29ybGQ=",
+                  "error": "",
+                  "message": "OK"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/endpoints/{uuid}/config": {
+      "get": {
+        "tags": [
+          "Endpoint Configuration"
+        ],
+        "summary": "Get endpoint configuration",
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "description": "uuid path parameter",
+            "required": true,
+            "allowEmptyValue": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "description": "Select input and output format (allowed toml, json)",
+            "required": false,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTTP 200 response",
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": {
+                    "actions": {
+                      "available-actions": null,
+                      "critical": [],
+                      "high": [],
+                      "low": [],
+                      "medium": []
+                    },
+                    "audit": {
+                      "audit-dirs": [],
+                      "audit-policies": [],
+                      "enable": false
+                    },
+                    "canaries": {
+                      "actions": [],
+                      "enable": false,
+                      "group": null,
+                      "whitelist": []
+                    },
+                    "criticality-treshold": 0,
+                    "db-path": "somerandompath",
+                    "dump": {
+                      "compression": false,
+                      "dir": "",
+                      "dump-untracked": false,
+                      "max-dumps": 0
+                    },
+                    "en-filters": false,
+                    "en-hooks": false,
+                    "endpoint": false,
+                    "etw": {
+                      "providers": [],
+                      "traces": []
+                    },
+                    "forwarder": {
+                      "local": false,
+                      "logging": {
+                        "dir": "",
+                        "rotation-interval": 0
+                      },
+                      "manager": {
+                        "endpoint-key": "",
+                        "endpoint-uuid": "",
+                        "host": "",
+                        "max-upload-size": 0,
+                        "port": 0,
+                        "proto": "",
+                        "server-fingerprint": "",
+                        "server-key": "",
+                        "unsafe": false
+                      }
+                    },
+                    "log-all": false,
+                    "logfile": "",
+                    "report": {
+                      "commands": null,
+                      "en-reporting": false,
+                      "osquery": {
+                        "tables": []
+                      },
+                      "timeout": 0
+                    },
+                    "rules": {
+                      "containers-db": "",
+                      "rules-db": "",
+                      "update-interval": 0
+                    },
+                    "sysmon": {
+                      "archive-directory": "",
+                      "bin": "",
+                      "clean-archived": false
+                    }
+                  },
+                  "error": "",
+                  "message": "OK"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Endpoint Configuration"
+        ],
+        "summary": "Change endpoint configuration",
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "description": "uuid path parameter",
+            "required": true,
+            "allowEmptyValue": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "description": "Select input and output format (allowed toml, json)",
+            "required": false,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Configuration content",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "actions": {
+                    "type": "object",
+                    "properties": {
+                      "available-actions": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "critical": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "high": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "low": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "medium": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "audit": {
+                    "type": "object",
+                    "properties": {
+                      "audit-dirs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "audit-policies": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "enable": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "canaries": {
+                    "type": "object",
+                    "properties": {
+                      "actions": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "enable": {
+                        "type": "boolean"
+                      },
+                      "group": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "delete": {
+                              "type": "boolean"
+                            },
+                            "directories": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "files": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "hide-dirs": {
+                              "type": "boolean"
+                            },
+                            "hide-files": {
+                              "type": "boolean"
+                            },
+                            "set-audit-acl": {
+                              "type": "boolean"
+                            }
+                          }
+                        }
+                      },
+                      "whitelist": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "criticality-treshold": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "db-path": {
+                    "type": "string"
+                  },
+                  "dump": {
+                    "type": "object",
+                    "properties": {
+                      "compression": {
+                        "type": "boolean"
+                      },
+                      "dir": {
+                        "type": "string"
+                      },
+                      "dump-untracked": {
+                        "type": "boolean"
+                      },
+                      "max-dumps": {
+                        "type": "integer",
+                        "format": "int64"
+                      }
+                    }
+                  },
+                  "en-filters": {
+                    "type": "boolean"
+                  },
+                  "en-hooks": {
+                    "type": "boolean"
+                  },
+                  "endpoint": {
+                    "type": "boolean"
+                  },
+                  "etw": {
+                    "type": "object",
+                    "properties": {
+                      "providers": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "traces": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "forwarder": {
+                    "type": "object",
+                    "properties": {
+                      "local": {
+                        "type": "boolean"
+                      },
+                      "logging": {
+                        "type": "object",
+                        "properties": {
+                          "dir": {
+                            "type": "string"
+                          },
+                          "rotation-interval": {
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "manager": {
+                        "type": "object",
+                        "properties": {
+                          "endpoint-key": {
+                            "type": "string"
+                          },
+                          "endpoint-uuid": {
+                            "type": "string"
+                          },
+                          "host": {
+                            "type": "string"
+                          },
+                          "max-upload-size": {
+                            "type": "integer",
+                            "format": "int64"
+                          },
+                          "port": {
+                            "type": "integer",
+                            "format": "int64"
+                          },
+                          "proto": {
+                            "type": "string"
+                          },
+                          "server-fingerprint": {
+                            "type": "string"
+                          },
+                          "server-key": {
+                            "type": "string"
+                          },
+                          "unsafe": {
+                            "type": "boolean"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "log-all": {
+                    "type": "boolean"
+                  },
+                  "logfile": {
+                    "type": "string"
+                  },
+                  "report": {
+                    "type": "object",
+                    "properties": {
+                      "commands": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "args": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "error": {
+                              "type": "string"
+                            },
+                            "expect-json": {
+                              "type": "boolean"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "stderr": {
+                              "type": "string",
+                              "format": "binary"
+                            },
+                            "stdout": {
+                              "type": "object"
+                            },
+                            "timeout": {
+                              "type": "object"
+                            },
+                            "timestamp": {
+                              "type": "string",
+                              "format": "date"
+                            }
+                          }
+                        }
+                      },
+                      "en-reporting": {
+                        "type": "boolean"
+                      },
+                      "osquery": {
+                        "type": "object",
+                        "properties": {
+                          "tables": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "timeout": {
+                        "type": "object"
+                      }
+                    }
+                  },
+                  "rules": {
+                    "type": "object",
+                    "properties": {
+                      "containers-db": {
+                        "type": "string"
+                      },
+                      "rules-db": {
+                        "type": "string"
+                      },
+                      "update-interval": {
+                        "type": "object"
+                      }
+                    }
+                  },
+                  "sysmon": {
+                    "type": "object",
+                    "properties": {
+                      "archive-directory": {
+                        "type": "string"
+                      },
+                      "bin": {
+                        "type": "string"
+                      },
+                      "clean-archived": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              },
+              "example": {
+                "db-path": "somerandompath",
+                "criticality-treshold": 0,
+                "en-hooks": false,
+                "en-filters": false,
+                "logfile": "",
+                "log-all": false,
+                "endpoint": false,
+                "etw": {
+                  "providers": null,
+                  "traces": null
+                },
+                "forwarder": {
+                  "local": false,
+                  "manager": {
+                    "proto": "",
+                    "host": "",
+                    "port": 0,
+                    "endpoint-uuid": "",
+                    "endpoint-key": "",
+                    "server-key": "",
+                    "server-fingerprint": "",
+                    "unsafe": false,
+                    "max-upload-size": 0
+                  },
+                  "logging": {
+                    "dir": "",
+                    "rotation-interval": 0
+                  }
+                },
+                "sysmon": {
+                  "bin": "",
+                  "archive-directory": "",
+                  "clean-archived": false
+                },
+                "actions": {
+                  "available-actions": null,
+                  "low": null,
+                  "medium": null,
+                  "high": null,
+                  "critical": null
+                },
+                "dump": {
+                  "dir": "",
+                  "max-dumps": 0,
+                  "compression": false,
+                  "dump-untracked": false
+                },
+                "report": {
+                  "en-reporting": false,
+                  "osquery": {
+                    "tables": null
+                  },
+                  "commands": null,
+                  "timeout": 0
+                },
+                "rules": {
+                  "rules-db": "",
+                  "containers-db": "",
+                  "update-interval": 0
+                },
+                "audit": {
+                  "enable": false,
+                  "audit-policies": null,
+                  "audit-dirs": null
+                },
+                "canaries": {
+                  "enable": false,
+                  "actions": null,
+                  "whitelist": null,
+                  "group": null
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "HTTP 200 response",
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": {
+                    "actions": {
+                      "available-actions": null,
+                      "critical": null,
+                      "high": null,
+                      "low": null,
+                      "medium": null
+                    },
+                    "audit": {
+                      "audit-dirs": null,
+                      "audit-policies": null,
+                      "enable": false
+                    },
+                    "canaries": {
+                      "actions": null,
+                      "enable": false,
+                      "group": null,
+                      "whitelist": null
+                    },
+                    "criticality-treshold": 0,
+                    "db-path": "somerandompath",
+                    "dump": {
+                      "compression": false,
+                      "dir": "",
+                      "dump-untracked": false,
+                      "max-dumps": 0
+                    },
+                    "en-filters": false,
+                    "en-hooks": false,
+                    "endpoint": false,
+                    "etw": {
+                      "providers": null,
+                      "traces": null
+                    },
+                    "forwarder": {
+                      "local": false,
+                      "logging": {
+                        "dir": "",
+                        "rotation-interval": 0
+                      },
+                      "manager": {
+                        "endpoint-key": "",
+                        "endpoint-uuid": "",
+                        "host": "",
+                        "max-upload-size": 0,
+                        "port": 0,
+                        "proto": "",
+                        "server-fingerprint": "",
+                        "server-key": "",
+                        "unsafe": false
+                      }
+                    },
+                    "log-all": false,
+                    "logfile": "",
+                    "report": {
+                      "commands": null,
+                      "en-reporting": false,
+                      "osquery": {
+                        "tables": null
+                      },
+                      "timeout": 0
+                    },
+                    "rules": {
+                      "containers-db": "",
+                      "rules-db": "",
+                      "update-interval": 0
+                    },
+                    "sysmon": {
+                      "archive-directory": "",
+                      "bin": "",
+                      "clean-archived": false
+                    }
+                  },
+                  "error": "",
+                  "message": "OK"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Endpoint Configuration"
+        ],
+        "summary": "Delete endpoint configuration (this causes the endpoint to sync again its current configuration)",
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "description": "uuid path parameter",
+            "required": true,
+            "allowEmptyValue": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "description": "Select input and output format (allowed toml, json)",
+            "required": false,
+            "allowEmptyValue": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTTP 200 response",
+            "content": {
+              "application/json": {
+                "example": {
+                  "data": null,
                   "error": "",
                   "message": "OK"
                 }
@@ -2180,9 +3944,9 @@
                       "Event": {
                         "Detection": {
                           "Actions": [],
-                          "Criticality": 10,
+                          "Criticality": 4,
                           "Signature": [
-                            "UntrustedDriverLoaded"
+                            "SuspiciousService"
                           ]
                         },
                         "EdrData": {
@@ -2194,27 +3958,51 @@
                           },
                           "Event": {
                             "Detection": true,
-                            "Hash": "f44561509cbfad21d43a3d6f927a1e1d470230d0",
-                            "ReceiptTime": "2022-03-04T13:20:10.868957325Z"
+                            "Hash": "039f9f93b6f830ecb8be3a6be503c0a679d7f765",
+                            "ReceiptTime": "2022-08-24T10:48:28.371120128Z"
                           }
                         },
                         "EventData": {
-                          "Hashes": "SHA1=4777B847E66E26D07CAB85361A93F6B9A1DF3E21,MD5=24A56CB3ECB97815A01514B2876A4417,SHA256=7906DCF8E5CCC7D8C0C3DA61785DE448DF554B0D0CF81BFD34DF9DEAF8962F64,IMPHASH=722ECECC50D0D02124BAB0A56989296C",
-                          "ImageLoaded": "C:\\Windows\\System32\\drivers\\VBoxWddm.sys",
-                          "ImageLoadedSize": "404296",
+                          "Ancestors": "System|C:\\Windows\\System32\\smss.exe|C:\\Windows\\System32\\smss.exe|C:\\Windows\\System32\\wininit.exe|C:\\Windows\\System32\\services.exe",
+                          "CommandLine": "\"C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.2106.6-0\\MsMpEng.exe\"",
+                          "Company": "Microsoft Corporation",
+                          "CurrentDirectory": "C:\\Windows\\system32\\",
+                          "Description": "Antimalware Service Executable",
+                          "FileVersion": "4.18.2106.6 (WinBuild.160101.0800)",
+                          "Hashes": "SHA1=FBF03B5D6DC1A7EDAB0BA8D4DD27291C739E5813,MD5=B1C15F9DB942B373B2FC468B7048E63F,SHA256=1DC05B6DD6281840CEB822604B0E403E499180D636D02EC08AD77B4EB56F1B9C,IMPHASH=8AA2B8727E6858A3557A4C09970B9A5D",
+                          "Image": "C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.2106.6-0\\MsMpEng.exe",
+                          "ImageSize": "136640",
+                          "IntegrityLevel": "System",
+                          "LogonGuid": "{515cd0d1-7667-6123-e703-000000000000}",
+                          "LogonId": "0x3E7",
+                          "OriginalFileName": "MsMpEng.exe",
+                          "ParentCommandLine": "C:\\Windows\\system32\\services.exe",
+                          "ParentImage": "C:\\Windows\\System32\\services.exe",
+                          "ParentIntegrityLevel": "System",
+                          "ParentProcessGuid": "{515cd0d1-7666-6123-0b00-000000007300}",
+                          "ParentProcessId": "692",
+                          "ParentServices": "N/A",
+                          "ParentUser": "NT AUTHORITY\\SYSTEM",
+                          "ProcessGuid": "{515cd0d1-7669-6123-4e00-000000007300}",
+                          "ProcessId": "3276",
+                          "Product": "Microsoft® Windows® Operating System",
                           "RuleName": "-",
-                          "Signature": "Oracle Corporation",
-                          "SignatureStatus": "Valid",
-                          "Signed": "true",
-                          "UtcTime": "2021-08-23 10:20:18.876"
+                          "Services": "WinDefend",
+                          "TerminalSessionId": "0",
+                          "User": "NT AUTHORITY\\SYSTEM",
+                          "UtcTime": "2021-08-23 10:20:25.475"
                         },
                         "System": {
                           "Channel": "Microsoft-Windows-Sysmon/Operational",
                           "Computer": "DESKTOP-LJRVE06",
-                          "EventID": 6,
+                          "Correlation": {
+                            "ActivityID": "",
+                            "RelatedActivityID": ""
+                          },
+                          "EventID": 1,
                           "Execution": {
                             "ProcessID": 3220,
-                            "ThreadID": 3584
+                            "ThreadID": 3848
                           },
                           "Keywords": {
                             "Name": "",
@@ -2237,7 +4025,7 @@
                             "Value": 0
                           },
                           "TimeCreated": {
-                            "SystemTime": "2022-03-04T14:20:09.815018806+01:00"
+                            "SystemTime": "2022-08-24T12:48:27.325122364+02:00"
                           }
                         }
                       }
@@ -2246,9 +4034,9 @@
                       "Event": {
                         "Detection": {
                           "Actions": [],
-                          "Criticality": 10,
+                          "Criticality": 4,
                           "Signature": [
-                            "UntrustedDriverLoaded"
+                            "SuspiciousService"
                           ]
                         },
                         "EdrData": {
@@ -2260,27 +4048,51 @@
                           },
                           "Event": {
                             "Detection": true,
-                            "Hash": "e333008549a189dd491990147dd749d436e0532e",
-                            "ReceiptTime": "2022-03-04T13:20:10.869393733Z"
+                            "Hash": "039f9f93b6f830ecb8be3a6be503c0a679d7f765",
+                            "ReceiptTime": "2022-08-24T10:48:28.370602986Z"
                           }
                         },
                         "EventData": {
-                          "Hashes": "SHA1=E9AC7F28883867C91CD940E6F2EC6E98AA2197AF,MD5=1E683E20DDD61ECBDD0D046DB7FB6027,SHA256=374FF85925CBDD75D64180E7D2B20A13F6EF2ABD248E6CB7D4FF2B7A42DBE5C8,IMPHASH=D6B88475B1759078DD0B119777B66A37",
-                          "ImageLoaded": "C:\\Windows\\System32\\drivers\\VBoxMouse.sys",
-                          "ImageLoadedSize": "186528",
+                          "Ancestors": "System|C:\\Windows\\System32\\smss.exe|C:\\Windows\\System32\\smss.exe|C:\\Windows\\System32\\wininit.exe|C:\\Windows\\System32\\services.exe",
+                          "CommandLine": "\"C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.2106.6-0\\MsMpEng.exe\"",
+                          "Company": "Microsoft Corporation",
+                          "CurrentDirectory": "C:\\Windows\\system32\\",
+                          "Description": "Antimalware Service Executable",
+                          "FileVersion": "4.18.2106.6 (WinBuild.160101.0800)",
+                          "Hashes": "SHA1=FBF03B5D6DC1A7EDAB0BA8D4DD27291C739E5813,MD5=B1C15F9DB942B373B2FC468B7048E63F,SHA256=1DC05B6DD6281840CEB822604B0E403E499180D636D02EC08AD77B4EB56F1B9C,IMPHASH=8AA2B8727E6858A3557A4C09970B9A5D",
+                          "Image": "C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.2106.6-0\\MsMpEng.exe",
+                          "ImageSize": "136640",
+                          "IntegrityLevel": "System",
+                          "LogonGuid": "{515cd0d1-7667-6123-e703-000000000000}",
+                          "LogonId": "0x3E7",
+                          "OriginalFileName": "MsMpEng.exe",
+                          "ParentCommandLine": "C:\\Windows\\system32\\services.exe",
+                          "ParentImage": "C:\\Windows\\System32\\services.exe",
+                          "ParentIntegrityLevel": "System",
+                          "ParentProcessGuid": "{515cd0d1-7666-6123-0b00-000000007300}",
+                          "ParentProcessId": "692",
+                          "ParentServices": "N/A",
+                          "ParentUser": "NT AUTHORITY\\SYSTEM",
+                          "ProcessGuid": "{515cd0d1-7669-6123-4e00-000000007300}",
+                          "ProcessId": "3276",
+                          "Product": "Microsoft® Windows® Operating System",
                           "RuleName": "-",
-                          "Signature": "Oracle Corporation",
-                          "SignatureStatus": "Valid",
-                          "Signed": "true",
-                          "UtcTime": "2021-08-23 10:20:18.860"
+                          "Services": "WinDefend",
+                          "TerminalSessionId": "0",
+                          "User": "NT AUTHORITY\\SYSTEM",
+                          "UtcTime": "2021-08-23 10:20:25.475"
                         },
                         "System": {
                           "Channel": "Microsoft-Windows-Sysmon/Operational",
                           "Computer": "DESKTOP-LJRVE06",
-                          "EventID": 6,
+                          "Correlation": {
+                            "ActivityID": "",
+                            "RelatedActivityID": ""
+                          },
+                          "EventID": 1,
                           "Execution": {
                             "ProcessID": 3220,
-                            "ThreadID": 3584
+                            "ThreadID": 3848
                           },
                           "Keywords": {
                             "Name": "",
@@ -2303,7 +4115,7 @@
                             "Value": 0
                           },
                           "TimeCreated": {
-                            "SystemTime": "2022-03-04T14:20:09.815088808+01:00"
+                            "SystemTime": "2022-08-24T12:48:27.325122364+02:00"
                           }
                         }
                       }
@@ -2429,14 +4241,14 @@
                           },
                           "Event": {
                             "Detection": false,
-                            "Hash": "05c8551fbea040aed5f844d1a5c1f383523f720e",
-                            "ReceiptTime": "2022-03-04T13:20:10.862574242Z"
+                            "Hash": "0a4077f1d13ff7d07dcc2fa4f458a63a2b950911",
+                            "ReceiptTime": "2022-08-24T10:48:28.364112404Z"
                           }
                         },
                         "EventData": {
                           "CommandLine": "C:\\Windows\\system32\\svchost.exe -k appmodel -p -s StateRepository",
                           "CurrentDirectory": "C:\\Windows\\system32\\",
-                          "Details": "windows.appService",
+                          "Details": "S-1-15-2-2434737943-167758768-3180539153-984336765-1107280622-3591121930-2677285773",
                           "EventType": "SetValue",
                           "Image": "C:\\Windows\\system32\\svchost.exe",
                           "ImageHashes": "SHA1=75C5A97F521F760E32A4A9639A653EED862E9C61,MD5=9520A99E77D6196D0D09833146424113,SHA256=DD191A5B23DF92E12A8852291F9FB5ED594B76A28A5A464418442584AFD1E048,IMPHASH=247B9220E5D9B720A82B2C8B5069AD69",
@@ -2449,13 +4261,17 @@
                           "ProcessThreatScore": "0",
                           "RuleName": "-",
                           "Services": "StateRepository",
-                          "TargetObject": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AppModel\\StateRepository\\Cache\\ApplicationExtension\\Data\\1a\\Category",
+                          "TargetObject": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AppModel\\StateRepository\\Cache\\PackageFamily\\Data\\15\\PackageSID",
                           "User": "NT AUTHORITY\\SYSTEM",
-                          "UtcTime": "2021-08-23 10:20:30.565"
+                          "UtcTime": "2021-08-23 10:20:29.669"
                         },
                         "System": {
                           "Channel": "Microsoft-Windows-Sysmon/Operational",
                           "Computer": "DESKTOP-LJRVE06",
+                          "Correlation": {
+                            "ActivityID": "",
+                            "RelatedActivityID": ""
+                          },
                           "EventID": 13,
                           "Execution": {
                             "ProcessID": 3220,
@@ -2482,7 +4298,7 @@
                             "Value": 0
                           },
                           "TimeCreated": {
-                            "SystemTime": "2022-03-04T14:20:09.813924283+01:00"
+                            "SystemTime": "2022-08-24T12:48:27.324288913+02:00"
                           }
                         }
                       }
@@ -2498,32 +4314,38 @@
                           },
                           "Event": {
                             "Detection": false,
-                            "Hash": "4ea167d57b31dcfaee2b1ff1db198a7713f85e55",
-                            "ReceiptTime": "2022-03-04T13:20:10.863040179Z"
+                            "Hash": "45f99356c67ddb05b3961580ddd05301c3de30d8",
+                            "ReceiptTime": "2022-08-24T10:48:28.36456168Z"
                           }
                         },
                         "EventData": {
-                          "CommandLine": "C:\\Windows\\System32\\svchost.exe -k utcsvc -p",
+                          "CommandLine": "C:\\Windows\\system32\\svchost.exe -k appmodel -p -s StateRepository",
                           "CurrentDirectory": "C:\\Windows\\system32\\",
-                          "Device": "\\Device\\HarddiskVolume2",
-                          "Image": "C:\\Windows\\System32\\svchost.exe",
+                          "Details": "windows.protocol",
+                          "EventType": "SetValue",
+                          "Image": "C:\\Windows\\system32\\svchost.exe",
                           "ImageHashes": "SHA1=75C5A97F521F760E32A4A9639A653EED862E9C61,MD5=9520A99E77D6196D0D09833146424113,SHA256=DD191A5B23DF92E12A8852291F9FB5ED594B76A28A5A464418442584AFD1E048,IMPHASH=247B9220E5D9B720A82B2C8B5069AD69",
                           "ImageSignature": "?",
                           "ImageSignatureStatus": "?",
                           "ImageSigned": "false",
                           "IntegrityLevel": "System",
-                          "ProcessGuid": "{515cd0d1-7669-6123-4500-000000007300}",
-                          "ProcessId": "2364",
+                          "ProcessGuid": "{515cd0d1-7668-6123-3c00-000000007300}",
+                          "ProcessId": "2556",
                           "ProcessThreatScore": "0",
                           "RuleName": "-",
-                          "Services": "DiagTrack",
+                          "Services": "StateRepository",
+                          "TargetObject": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AppModel\\StateRepository\\Cache\\ApplicationExtension\\Data\\538\\Category",
                           "User": "NT AUTHORITY\\SYSTEM",
-                          "UtcTime": "2021-08-23 10:20:25.956"
+                          "UtcTime": "2021-08-23 10:20:30.799"
                         },
                         "System": {
                           "Channel": "Microsoft-Windows-Sysmon/Operational",
                           "Computer": "DESKTOP-LJRVE06",
-                          "EventID": 9,
+                          "Correlation": {
+                            "ActivityID": "",
+                            "RelatedActivityID": ""
+                          },
+                          "EventID": 13,
                           "Execution": {
                             "ProcessID": 3220,
                             "ThreadID": 3848
@@ -2549,7 +4371,7 @@
                             "Value": 0
                           },
                           "TimeCreated": {
-                            "SystemTime": "2022-03-04T14:20:09.813924951+01:00"
+                            "SystemTime": "2022-08-24T12:48:27.3242892+02:00"
                           }
                         }
                       }
@@ -2595,30 +4417,30 @@
                     "avg-signature-criticality": 0,
                     "bounded-score": 0,
                     "count-by-signature": {
-                      "DefenderConfigChanged": 3,
-                      "NewAutorun": 17,
-                      "SuspiciousService": 4,
-                      "UnknownServices": 8,
-                      "UntrustedDriverLoaded": 18
+                      "DefenderConfigChanged": 4,
+                      "NewAutorun": 19,
+                      "SuspiciousService": 5,
+                      "UnknownServices": 9,
+                      "UntrustedDriverLoaded": 13
                     },
                     "count-uniq-signatures": 5,
                     "identifier": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d",
-                    "median-time": "2022-03-04T14:20:13.218428238+01:00",
+                    "median-time": "2022-08-24T12:48:32.709584161+02:00",
                     "score": 0,
                     "signature-count": 50,
                     "signature-criticality-metric": 0,
                     "signature-diversity": 100,
                     "signatures": [
+                      "DefenderConfigChanged",
                       "SuspiciousService",
-                      "UnknownServices",
                       "UntrustedDriverLoaded",
                       "NewAutorun",
-                      "DefenderConfigChanged"
+                      "UnknownServices"
                     ],
-                    "start-time": "2022-03-04T14:20:13.216631809+01:00",
+                    "start-time": "2022-08-24T12:48:32.708425432+02:00",
                     "std-dev-alert-criticality": 0,
                     "std-dev-signature-criticality": -92233720368547760,
-                    "stop-time": "2022-03-04T14:20:13.220224668+01:00",
+                    "stop-time": "2022-08-24T12:48:32.71074289+02:00",
                     "sum-alert-criticality": 0,
                     "sum-rule-criticality": 0,
                     "tactics": null,
@@ -2662,15 +4484,15 @@
                     "avg-signature-criticality": 0,
                     "bounded-score": 0,
                     "count-by-signature": {
-                      "DefenderConfigChanged": 3,
-                      "NewAutorun": 17,
-                      "SuspiciousService": 4,
-                      "UnknownServices": 8,
-                      "UntrustedDriverLoaded": 18
+                      "DefenderConfigChanged": 4,
+                      "NewAutorun": 19,
+                      "SuspiciousService": 5,
+                      "UnknownServices": 9,
+                      "UntrustedDriverLoaded": 13
                     },
                     "count-uniq-signatures": 5,
                     "identifier": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d",
-                    "median-time": "2022-03-04T14:20:13.218428238+01:00",
+                    "median-time": "2022-08-24T12:48:32.709584161+02:00",
                     "score": 0,
                     "signature-count": 50,
                     "signature-criticality-metric": 0,
@@ -2678,14 +4500,14 @@
                     "signatures": [
                       "UntrustedDriverLoaded",
                       "NewAutorun",
+                      "UnknownServices",
                       "DefenderConfigChanged",
-                      "SuspiciousService",
-                      "UnknownServices"
+                      "SuspiciousService"
                     ],
-                    "start-time": "2022-03-04T14:20:13.216631809+01:00",
+                    "start-time": "2022-08-24T12:48:32.708425432+02:00",
                     "std-dev-alert-criticality": 0,
                     "std-dev-signature-criticality": -92233720368547760,
-                    "stop-time": "2022-03-04T14:20:13.220224668+01:00",
+                    "stop-time": "2022-08-24T12:48:32.71074289+02:00",
                     "sum-alert-criticality": 0,
                     "sum-rule-criticality": 0,
                     "tactics": null,
@@ -2771,20 +4593,20 @@
                     {
                       "alert-count": 50,
                       "alert-criticality-metric": 0,
-                      "archived-time": "2022-03-04T14:20:14.287975813+01:00",
+                      "archived-time": "2022-08-24T12:48:33.777146389+02:00",
                       "avg-alert-criticality": 0,
                       "avg-signature-criticality": 0,
                       "bounded-score": 0,
                       "count-by-signature": {
-                        "DefenderConfigChanged": 3,
-                        "NewAutorun": 17,
-                        "SuspiciousService": 4,
-                        "UnknownServices": 8,
-                        "UntrustedDriverLoaded": 18
+                        "DefenderConfigChanged": 4,
+                        "NewAutorun": 19,
+                        "SuspiciousService": 5,
+                        "UnknownServices": 9,
+                        "UntrustedDriverLoaded": 13
                       },
                       "count-uniq-signatures": 5,
                       "identifier": "5a92baeb-9384-47d3-92b4-a0db6f9b8c6d",
-                      "median-time": "2022-03-04T14:20:13.218428238+01:00",
+                      "median-time": "2022-08-24T12:48:32.709584161+02:00",
                       "score": 0,
                       "signature-count": 50,
                       "signature-criticality-metric": 0,
@@ -2792,14 +4614,14 @@
                       "signatures": [
                         "UntrustedDriverLoaded",
                         "NewAutorun",
+                        "UnknownServices",
                         "DefenderConfigChanged",
-                        "SuspiciousService",
-                        "UnknownServices"
+                        "SuspiciousService"
                       ],
-                      "start-time": "2022-03-04T14:20:13.216631809+01:00",
+                      "start-time": "2022-08-24T12:48:32.708425432+02:00",
                       "std-dev-alert-criticality": 0,
                       "std-dev-signature-criticality": -92233720368547760,
-                      "stop-time": "2022-03-04T14:20:13.220224668+01:00",
+                      "stop-time": "2022-08-24T12:48:32.71074289+02:00",
                       "sum-alert-criticality": 0,
                       "sum-rule-criticality": 0,
                       "tactics": null,
@@ -2881,10 +4703,10 @@
                 "example": {
                   "data": [
                     {
-                      "guuid": "3298e002-14d5-85ec-d9a0-1c1dcc98abd7",
+                      "guuid": "871c086e-f3c7-5d12-76e6-7e109d30d648",
                       "source": "XyzTIProvider",
                       "type": "domain",
-                      "uuid": "5be6df57-7e37-a645-5546-23b35dddcf10",
+                      "uuid": "e7b3aefe-f0ff-1861-55a2-bf6e693e1a06",
                       "value": "some.random.domain"
                     }
                   ],
@@ -2932,8 +4754,8 @@
               },
               "example": [
                 {
-                  "uuid": "5be6df57-7e37-a645-5546-23b35dddcf10",
-                  "guuid": "3298e002-14d5-85ec-d9a0-1c1dcc98abd7",
+                  "uuid": "e7b3aefe-f0ff-1861-55a2-bf6e693e1a06",
+                  "guuid": "871c086e-f3c7-5d12-76e6-7e109d30d648",
                   "source": "XyzTIProvider",
                   "value": "some.random.domain",
                   "type": "domain"
@@ -2951,10 +4773,10 @@
                 "example": {
                   "data": [
                     {
-                      "guuid": "3298e002-14d5-85ec-d9a0-1c1dcc98abd7",
+                      "guuid": "871c086e-f3c7-5d12-76e6-7e109d30d648",
                       "source": "XyzTIProvider",
                       "type": "domain",
-                      "uuid": "5be6df57-7e37-a645-5546-23b35dddcf10",
+                      "uuid": "e7b3aefe-f0ff-1861-55a2-bf6e693e1a06",
                       "value": "some.random.domain"
                     }
                   ],
@@ -3451,8 +5273,8 @@
                     "description": "",
                     "group": "",
                     "identifier": "TestAdminUser",
-                    "key": "Ln81vw3HbIijKvo7M0tkbvSlP3DdPIKiNXKK0xFTcyq5lTftG0Ns8uGKkCNazc9M",
-                    "uuid": "ddedc408-fcde-38df-0e84-b879528d66a7"
+                    "key": "xkTKBxE6TgXPvszVUxCwmxwPE2BILBq3WNt1ex8UOooGpFfe9Ud8pFll1kURwV90",
+                    "uuid": "54f050b8-6648-9aee-a2f4-23d51f592bee"
                   },
                   "error": "",
                   "message": "OK"
@@ -3466,7 +5288,7 @@
         "tags": [
           "Admin API User's Management"
         ],
-        "summary": "Create a new user from POST data",
+        "summary": "Create a new user from POST data",
         "requestBody": {
           "description": "Data to create the user with. Fields uuid and key if empty will be generated.",
           "content": {
@@ -3495,7 +5317,7 @@
                 }
               },
               "example": {
-                "uuid": "a97996ae-530f-4057-ffff-a9e692e4f24b",
+                "uuid": "ce3818bd-99d3-3571-6235-56fb9f0ed01f",
                 "identifier": "SecondTestAdmin",
                 "key": "ChangeMe",
                 "group": "CSIRT",
@@ -3516,7 +5338,7 @@
                     "group": "CSIRT",
                     "identifier": "SecondTestAdmin",
                     "key": "ChangeMe",
-                    "uuid": "a97996ae-530f-4057-ffff-a9e692e4f24b"
+                    "uuid": "ce3818bd-99d3-3571-6235-56fb9f0ed01f"
                   },
                   "error": "",
                   "message": "OK"
@@ -3604,7 +5426,7 @@
                     "group": "SOC",
                     "identifier": "SecondTestAdmin",
                     "key": "NewWeakKey",
-                    "uuid": "a97996ae-530f-4057-ffff-a9e692e4f24b"
+                    "uuid": "ce3818bd-99d3-3571-6235-56fb9f0ed01f"
                   },
                   "error": "",
                   "message": "OK"
@@ -3642,7 +5464,7 @@
                     "group": "SOC",
                     "identifier": "SecondTestAdmin",
                     "key": "NewWeakKey",
-                    "uuid": "a97996ae-530f-4057-ffff-a9e692e4f24b"
+                    "uuid": "ce3818bd-99d3-3571-6235-56fb9f0ed01f"
                   },
                   "error": "",
                   "message": "OK"

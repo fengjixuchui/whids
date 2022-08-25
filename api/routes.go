@@ -2,40 +2,46 @@ package api
 
 // Routes used by Clients
 const (
-	// GET based API routes
+	// GET based API routes
 
 	// EptAPIServerKeyPath API route used to get server key
 	EptAPIServerKeyPath = "/key"
+	// EptAPIConfigPath API route used to get/post endpoint configuration
+	EptAPIConfigPath       = "/config"
+	EptAPIConfigSha256Path = "/config/sha256"
 	// EptAPIRulesPath API route used to get Gene rules available in server
 	EptAPIRulesPath = "/rules"
 	// EptAPIRulesSha256Path API route used to retrieve sha256 of latest batch of Gene rules
 	EptAPIRulesSha256Path = "/rules/sha256"
 
+	// Routes to work with sysmon configuration
 	EptAPISysmonConfigPath       = "/sysmon/config"
 	EptAPISysmonConfigSha256Path = "/sysmon/config/sha256"
 
-	// EptAPIIoCsPath API route used to serve IOC container
+	// EptAPIIoCsPath API route used to serve IOC container
 	EptAPIIoCsPath = "/iocs"
-	// EptAPIIoCsSha256Path API route used to serve sha256 of IOC container
+	// EptAPIIoCsSha256Path API route used to serve sha256 of IOC container
 	EptAPIIoCsSha256Path = "/iocs/sha256"
+	// EptAPITools API route used to update local tools
+	EptAPITools = "/tools"
 
-	// POST based API routes
+	// POST based API routes
 
-	// EptAPIPostLogsPath API route used to post logs
+	// EptAPIPostLogsPath API route used to post logs
 	EptAPIPostLogsPath = "/logs"
-	// EptAPIPostDumpPath API route used to dump things
+	// EptAPIPostDumpPath API route used to dump things
 	EptAPIPostDumpPath = "/upload/dumps"
-	// EptAPIPostSystemInfo API route used to send system information
+	// EptAPIPostSystemInfo API route used to send system information
 	EptAPIPostSystemInfo = "/info/system"
 
-	// GET and POST routes
+	// GET and POST routes
 
 	// EptAPICommandPath used to GET commands and POST results
 	EptAPICommandPath = "/commands"
 )
 
 var (
-	eptAPIVerbosePaths = []string{
+	EptAPIVerbosePaths = []string{
 		EptAPIServerKeyPath,
 		EptAPICommandPath,
 		EptAPIRulesSha256Path,
@@ -50,12 +56,27 @@ const (
 	AdmAPIUsers    = "/users"
 	AdmAPIUserByID = AdmAPIUsers + "/{uuuid:" + uuidRe + "}"
 
-	AdmAPIStatsPath             = "/stats"
-	AdmAPIIocsPath              = "/iocs"
-	AdmAPIRulesPath             = "/rules"
-	AdmAPIEndpointsPath         = "/endpoints"
-	AdmAPIEndpointsSysmonConfig = AdmAPIEndpointsPath + `/{os:\w+}/sysmon/config`
-	AdmAPIEndpointsByIDPath     = AdmAPIEndpointsPath + "/{euuid:" + uuidRe + "}"
+	AdmAPIStatsPath     = "/stats"
+	AdmAPIIocsPath      = "/iocs"
+	AdmAPIRulesPath     = "/rules"
+	AdmAPIEndpointsPath = "/endpoints"
+
+	AdmAPIEndpointsOSPath = AdmAPIEndpointsPath + `/{os:\w+}`
+
+	// Sysmon related
+	AdmAPIEndpointsSysmonPath   = AdmAPIEndpointsOSPath + `/sysmon`
+	AdmAPIEndpointsSysmonBinary = AdmAPIEndpointsSysmonPath + `/binary`
+	AdmAPIEndpointsSysmonConfig = AdmAPIEndpointsSysmonPath + `/config`
+
+	// OSQueryi related
+	AdmAPIEndpointsOSQueryiPath   = AdmAPIEndpointsOSPath + `/osqueryi`
+	AdmAPIEndpointsOSQueryiBinary = AdmAPIEndpointsOSQueryiPath + `/binary`
+
+	// Endpoint by UUID
+	AdmAPIEndpointsByIDPath = AdmAPIEndpointsPath + "/{euuid:" + uuidRe + "}"
+	// Config related
+	AdmAPIConfigSuffix       = "/config"
+	AdmAPIEndpointConfigPath = AdmAPIEndpointsByIDPath + AdmAPIConfigSuffix
 	// Command related
 	AdmAPICommandSuffix            = "/command"
 	AdmAPIEndpointCommandPath      = AdmAPIEndpointsByIDPath + AdmAPICommandSuffix

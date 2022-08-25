@@ -14,18 +14,20 @@ import (
 )
 
 const (
-	ContentTypeJson = "application/json"
-	ContentTypeXML  = "application/xml"
+	ContentTypeJson        = "application/json"
+	ContentTypeXML         = "application/xml"
+	ContentTypeOctetStream = "application/octet-stream"
 )
 
 type OpenAPI struct {
-	OpenAPI    string                `json:"openapi,omitempty"`
-	Info       *Info                 `json:"info,omitempty"`
-	Servers    []*Server             `json:"servers,omitempty"`
-	Paths      map[string]*PathItem  `json:"paths,omitempty"`
-	Components Components            `json:"components,omitempty"`
-	Security   []SecurityRequirement `json:"security,omitempty"`
-	// Not in OpenAPI spec
+	OpenAPI       string                `json:"openapi,omitempty"`
+	Info          *Info                 `json:"info,omitempty"`
+	Servers       []*Server             `json:"servers,omitempty"`
+	TestingServer *Server               `json:"-"` // there to generate tests
+	Paths         map[string]*PathItem  `json:"paths,omitempty"`
+	Components    Components            `json:"components,omitempty"`
+	Security      []SecurityRequirement `json:"security,omitempty"`
+	// Not in OpenAPI spec
 	Client            *http.Client              `json:"-"`
 	ApiKey            *SecurityScheme           `json:"-"`
 	ValidateOperation func(i interface{}) error `json:"-"`
@@ -81,9 +83,14 @@ func (oa *OpenAPI) AuthApiKey(header string, value string) {
 }
 
 func (oa *OpenAPI) ApiURL(path string) string {
-	server := strings.Trim(oa.FirstServer().URL, "/")
+	// take testing server in priority
+	server := oa.TestingServer
+	if server == nil {
+		server = oa.FirstServer()
+	}
+	serverURL := strings.Trim(server.URL, "/")
 	path = strings.Trim(path, "/")
-	return fmt.Sprintf("%s/%s", server, path)
+	return fmt.Sprintf("%s/%s", serverURL, path)
 }
 
 func (oa *OpenAPI) FirstServer() *Server {
@@ -160,8 +167,9 @@ func (oa *OpenAPI) docPath(path PathItem, op Operation) {
 	}
 }
 
-func (oa *OpenAPI) Do(base PathItem, op Operation) {
-	var err error
+func (oa *OpenAPI) do(base *PathItem, op *Operation) (err error) {
+	var req *http.Request
+	var resp *http.Response
 	var data []byte
 
 	body := new(bytes.Buffer)
@@ -173,7 +181,7 @@ func (oa *OpenAPI) Do(base PathItem, op Operation) {
 
 	if op.RequestBody != nil {
 		if data, err = op.RequestBody.ContentBytes(); err != nil {
-			panic(err)
+			return
 		}
 	}
 
@@ -208,9 +216,9 @@ func (oa *OpenAPI) Do(base PathItem, op Operation) {
 		}
 	}
 
-	req, err := http.NewRequest(op.Method, URL, body)
+	req, err = http.NewRequest(op.Method, URL, body)
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	// Set authentication header
@@ -218,9 +226,27 @@ func (oa *OpenAPI) Do(base PathItem, op Operation) {
 		req.Header.Add(oa.ApiKey.Name, oa.ApiKey.Value)
 	}
 
-	if resp, err := oa.Client.Do(req); err != nil {
-		panic(err)
-	} else if err := op.ParseResponse(resp); err != nil {
+	if resp, err = oa.Client.Do(req); err != nil {
+		return
+	}
+
+	if err = op.ParseResponse(resp); err != nil {
+		return
+	}
+
+	return
+}
+
+// Test does exactly what Do does except that it does not document Operation
+// the other difference is that this method returns any error encountered instead
+// of panicing
+func (oa *OpenAPI) Test(base PathItem, op Operation) error {
+	return oa.do(&base, &op)
+}
+
+func (oa *OpenAPI) Do(base PathItem, op Operation) {
+
+	if err := oa.do(&base, &op); err != nil {
 		panic(err)
 	}
 
@@ -384,6 +410,42 @@ func (o *Operation) softInit() {
 	}
 }
 
+func (o *Operation) GET(params ...*Parameter) Operation {
+	new := o.SetParams(params...)
+	return new.SetMethod("GET")
+}
+
+func (o *Operation) DELETE(params ...*Parameter) Operation {
+	new := o.SetParams(params...)
+	return new.SetMethod("DELETE")
+}
+
+func (o *Operation) POST(b *RequestBody, params ...*Parameter) Operation {
+	new := o.SetMethod("POST")
+	if b != nil {
+		new = new.SetRequestBody(b)
+	}
+	return new.SetParams(params...)
+}
+
+func (o *Operation) SetMethod(method string) Operation {
+	new := *o
+	new.Method = method
+	return new
+}
+
+func (o *Operation) SetParams(params ...*Parameter) Operation {
+	new := *o
+	new.Parameters = append(new.Parameters, params...)
+	return new
+}
+
+func (o *Operation) SetRequestBody(b *RequestBody) Operation {
+	new := *o
+	new.RequestBody = b
+	return new
+}
+
 func (o *Operation) ParseResponse(r *http.Response) (err error) {
 	var data []byte
 
@@ -396,11 +458,13 @@ func (o *Operation) ParseResponse(r *http.Response) (err error) {
 
 	switch ct {
 	case ContentTypeJson:
-		json.Unmarshal(data, &o.Output)
+		if err = json.Unmarshal(data, &o.Output); err != nil {
+			return err
+		}
 	case "":
 		break
 	default:
-		return fmt.Errorf("cannot parse Content-Type: %s", ct)
+		return fmt.Errorf("cannot parse Content-Type: %s", ct)
 	}
 
 	o.Responses[fmt.Sprintf("%d", r.StatusCode)] = Response{
@@ -529,6 +593,10 @@ func XMLRequestBody(desc string, data interface{}, required bool) *RequestBody {
 	return MakeRequestBody(desc, ContentTypeXML, data, required)
 }
 
+func BinaryRequestBody(desc string, data interface{}, required bool) *RequestBody {
+	return MakeRequestBody(desc, ContentTypeOctetStream, data, required)
+}
+
 func MakeRequestBody(desc, contentType string, data interface{}, required bool) *RequestBody {
 	content := make(map[string]MediaType)
 	content[contentType] = MediaType{
@@ -549,6 +617,12 @@ func (r *RequestBody) ContentBytes() (b []byte, err error) {
 			return json.Marshal(mt.Example)
 		case ContentTypeXML:
 			return xml.Marshal(mt.Example)
+		case ContentTypeOctetStream:
+			var ok bool
+			if b, ok = mt.Example.([]byte); !ok {
+				return nil, fmt.Errorf("failed to cast Example to []byte")
+			}
+			return b, nil
 		default:
 			return nil, fmt.Errorf("unknown Content-Type: %s", ct)
 		}

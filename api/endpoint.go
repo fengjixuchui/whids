@@ -5,7 +5,8 @@ import (
 	"time"
 
 	"github.com/0xrawsec/sod"
-	"github.com/0xrawsec/whids/hids/sysinfo"
+	"github.com/0xrawsec/whids/agent/config"
+	"github.com/0xrawsec/whids/agent/sysinfo"
 )
 
 // Endpoint structure used to track and interact with endpoints
@@ -17,10 +18,12 @@ type Endpoint struct {
 	Group          string              `json:"group"`
 	Criticality    int                 `json:"criticality"`
 	Key            string              `json:"key,omitempty"`
-	Command        *Command            `json:"command,omitempty"`
+	Command        *EndpointCommand    `json:"command,omitempty"`
 	Score          float64             `json:"score"`
 	Status         string              `json:"status"`
 	SystemInfo     *sysinfo.SystemInfo `json:"system-info,omitempty"`
+	Config         *config.Agent       `json:"config,omitempty"`
+	LastEvent      time.Time           `json:"last-event"`
 	LastDetection  time.Time           `json:"last-detection"`
 	LastConnection time.Time           `json:"last-connection"`
 }
