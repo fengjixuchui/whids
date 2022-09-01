@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"math/rand"
 	"os"
@@ -15,9 +14,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/0xrawsec/golang-utils/log"
 	"github.com/0xrawsec/golang-utils/readers"
 	"github.com/0xrawsec/golang-utils/sync/semaphore"
+	"github.com/0xrawsec/golog"
 	"github.com/0xrawsec/toast"
 	"github.com/0xrawsec/whids/api"
 	"github.com/0xrawsec/whids/api/client"
@@ -36,7 +35,7 @@ func init() {
 	// initialize random generator's seed
 	rand.Seed(time.Now().UnixNano())
 
-	data, err := ioutil.ReadFile(eventFile)
+	data, err := os.ReadFile(eventFile)
 	if err != nil {
 		panic(err)
 	}
@@ -141,7 +140,7 @@ func TestForwarderBasic(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	f, err := client.NewForwarder(ctx, &fconf)
+	f, err := client.NewForwarder(ctx, &fconf, golog.FromStdout())
 	if err != nil {
 		t.Errorf("Failed to create collector: %s", err)
 		t.FailNow()
@@ -163,7 +162,8 @@ func TestForwarderBasic(t *testing.T) {
 	if n := countEvents(r.eventSearcher); n != nevents {
 		t.Errorf("Some events were lost on the way: %d logged by server instead of %d sent", n, nevents)
 	}
-	log.Infof("Shutting down")
+
+	t.Log("Shutting down")
 }
 
 func TestCollectorAuthFailure(t *testing.T) {
@@ -193,7 +193,7 @@ func TestCollectorAuthFailure(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	f, err := client.NewForwarder(ctx, &fconf)
+	f, err := client.NewForwarder(ctx, &fconf, golog.FromStdout())
 	if err != nil {
 		t.Errorf("Failed to create collector: %s", err)
 		t.FailNow()
@@ -242,7 +242,7 @@ func TestCollectorAuthSuccess(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	f, err := client.NewForwarder(ctx, &fconf)
+	f, err := client.NewForwarder(ctx, &fconf, golog.FromStdout())
 	if err != nil {
 		t.Errorf("Failed to create collector: %s", err)
 		t.FailNow()
@@ -301,7 +301,7 @@ func TestForwarderParallel(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			c, err := client.NewForwarder(ctx, &fconf)
+			c, err := client.NewForwarder(ctx, &fconf, golog.FromStdout())
 			if err != nil {
 				t.Errorf("Failed to create collector: %s", err)
 			}
@@ -349,7 +349,7 @@ func TestForwarderQueueBasic(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	f, err := client.NewForwarder(ctx, &fconf)
+	f, err := client.NewForwarder(ctx, &fconf, golog.FromStdout())
 	if err != nil {
 		t.Errorf("Failed to create collector: %s", err)
 		t.FailNow()
@@ -411,7 +411,7 @@ func TestForwarderCleanup(t *testing.T) {
 	defer cancel()
 
 	// Inititialize the forwarder
-	f, err := client.NewForwarder(ctx, &fconf)
+	f, err := client.NewForwarder(ctx, &fconf, golog.FromStdout())
 	tt.CheckErr(err)
 	// decreases sleep time to speed up test
 	f.Sleep = time.Millisecond * 500
@@ -449,7 +449,7 @@ func TestForwarderCleanup(t *testing.T) {
 	// closing the forwarder triggers last cleanup
 	f.Close()
 
-	files, _ := ioutil.ReadDir(fconf.Logging.Dir)
+	files, _ := os.ReadDir(fconf.Logging.Dir)
 	// we expect the number of queued files + file to log alerts
 	expected := numberOfQueuedFiles + 1
 	tt.Assert(len(files) == expected, format("Expecting %d remaining in directory but got %d", expected, len(files)))

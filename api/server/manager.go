@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"math/big"
 	"math/rand"
@@ -24,6 +23,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/0xrawsec/golog"
 	"github.com/0xrawsec/sod"
 	"github.com/0xrawsec/whids/api"
 	"github.com/0xrawsec/whids/event"
@@ -36,7 +36,6 @@ import (
 	"github.com/0xrawsec/gene/v2/engine"
 	"github.com/0xrawsec/gene/v2/reducer"
 	"github.com/0xrawsec/golang-utils/fsutil"
-	"github.com/0xrawsec/golang-utils/log"
 	"github.com/0xrawsec/whids/logger"
 )
 
@@ -75,13 +74,13 @@ func IPFromRequest(req *http.Request) (net.IP, error) {
 	return userIP, nil
 }
 
-func gunzipMiddleware(next http.Handler) http.Handler {
+func (m *Manager) gunzipMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Content-Encoding") == "gzip" {
 			var err error
 			if r.Body, err = gzip.NewReader(r.Body); err != nil {
 				http.Error(w, "Cannot create gzip reader", http.StatusInternalServerError)
-				log.Errorf("Failed to create reader to uncompress request: %s", err)
+				m.Logger.Errorf("Failed to create reader to uncompress request: %s", err)
 				return
 			}
 		}
@@ -145,7 +144,7 @@ type ManagerConfig struct {
 // LoadManagerConfig loads the manager configuration from a file
 func LoadManagerConfig(path string) (*ManagerConfig, error) {
 	mc := ManagerConfig{}
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +184,7 @@ func (mc *ManagerConfig) Save() error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(mc.path, b, 0650)
+	return os.WriteFile(mc.path, b, 0650)
 }
 
 // Manager structure definition
@@ -214,6 +213,7 @@ type Manager struct {
 	iocs *ioc.IoCs
 
 	/* Public */
+	Logger *golog.Logger
 	Config *ManagerConfig
 }
 
@@ -221,7 +221,10 @@ type Manager struct {
 func NewManager(c *ManagerConfig) (*Manager, error) {
 	var err error
 
-	m := Manager{Config: c, iocs: ioc.NewIocs()}
+	m := Manager{
+		iocs:   ioc.NewIocs(),
+		Logger: golog.FromStdout(),
+		Config: c}
 
 	eventDir := filepath.Join(c.Logging.Root, "events")
 	m.eventLogger = logger.NewEventLogger(eventDir, c.Logging.LogBasename, utils.Giga)
@@ -244,7 +247,7 @@ func NewManager(c *ManagerConfig) (*Manager, error) {
 		return nil, fmt.Errorf("manager Admin API Error: invalid port to listen to %d", c.EndpointAPI.Port)
 	}
 
-	if err := os.MkdirAll(c.Logging.Root, utils.DefaultPerms); err != nil {
+	if err := os.MkdirAll(c.Logging.Root, utils.DefaultFileModeFile); err != nil {
 		return nil, fmt.Errorf("failed at creating log directory: %s", err)
 	}
 
@@ -267,7 +270,7 @@ func NewManager(c *ManagerConfig) (*Manager, error) {
 
 	// Dump Directory initialization
 	if m.Config.DumpDir != "" && !fsutil.IsDir(m.Config.DumpDir) {
-		if err := os.MkdirAll(m.Config.DumpDir, utils.DefaultPerms); err != nil {
+		if err := os.MkdirAll(m.Config.DumpDir, utils.DefaultFileModeFile); err != nil {
 			return &m, fmt.Errorf("failed to created dump directory (%s): %s", m.Config.DumpDir, err)
 		}
 	}
@@ -534,7 +537,7 @@ func (m *Manager) logAPIErrorf(fmt string, i ...interface{}) {
 
 	msg := format("%s: %s", funcName, format(fmt, i...))
 
-	log.Error(msg)
+	m.Logger.Error(msg)
 }
 
 // Wait the Manager to Shutdown

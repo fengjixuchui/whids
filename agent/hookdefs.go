@@ -2,7 +2,6 @@ package agent
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math"
 	"net"
 	"os"
@@ -13,7 +12,6 @@ import (
 	"github.com/0xrawsec/gene/v2/engine"
 
 	"github.com/0xrawsec/golang-utils/fsutil"
-	"github.com/0xrawsec/golang-utils/log"
 	"github.com/0xrawsec/golang-win32/win32"
 	"github.com/0xrawsec/golang-win32/win32/advapi32"
 	"github.com/0xrawsec/golang-win32/win32/kernel32"
@@ -132,7 +130,7 @@ func trackSysmonProcessCreate(h *Agent, e *event.EdrEvent) {
 
 	// Boot sequence is completed when LogonUI.exe is strarted
 	if strings.EqualFold(image, "C:\\Windows\\System32\\LogonUI.exe") {
-		log.Infof("Boot sequence completed")
+		h.logger.Infof("Boot sequence completed")
 		h.bootCompleted = true
 	}
 
@@ -386,9 +384,9 @@ func hookTerminator(h *Agent, e *event.EdrEvent) {
 
 	// terminate if blacklisted
 	if h.tracker.IsBlacklisted(commandLine) {
-		log.Warnf("Terminating blacklisted  process PID=%d CommandLine=\"%s\"", pid, commandLine)
+		h.logger.Warnf("Terminating blacklisted  process PID=%d CommandLine=\"%s\"", pid, commandLine)
 		if err := terminate(int(pid)); err != nil {
-			log.Errorf("Failed to terminate process PID=%d: %s", pid, err)
+			h.logger.Errorf("Failed to terminate process PID=%d: %s", pid, err)
 		}
 	}
 }
@@ -399,7 +397,7 @@ func hookProcTerm(h *Agent, e *event.EdrEvent) {
 	var guid string
 	var ok bool
 
-	log.Debug("Process termination events are enabled")
+	h.logger.Debug("Process termination events are enabled")
 	h.flagProcTermEn = true
 
 	if guid, ok = e.GetString(pathSysmonProcessGUID); !ok {
@@ -425,7 +423,7 @@ func hookSelfGUID(h *Agent, e *event.EdrEvent) {
 			if pimage == selfPath && ppid == int64(os.Getpid()) {
 				if pguid, ok := e.GetString(pathSysmonParentProcessGUID); ok {
 					h.guid = pguid
-					log.Infof("Found self GUID from PGUID: %s", h.guid)
+					h.logger.Infof("Found self GUID from PGUID: %s", h.guid)
 					return
 				}
 			}
@@ -437,7 +435,7 @@ func hookSelfGUID(h *Agent, e *event.EdrEvent) {
 			if image == selfPath && pid == int64(os.Getpid()) {
 				if guid, ok := e.GetString(pathSysmonProcessGUID); ok {
 					h.guid = guid
-					log.Infof("Found self GUID: %s", h.guid)
+					h.logger.Infof("Found self GUID: %s", h.guid)
 					return
 				}
 			}
@@ -499,7 +497,7 @@ func hookProcessIntegrityProcTamp(h *Agent, e *event.EdrEvent) {
 	}
 
 	if !kernel32.IsPIDRunning(int(pid)) {
-		log.Errorf("Cannot check process integrity process with PID=%d is stopped", pid)
+		h.logger.Errorf("Cannot check process integrity process with PID=%d is stopped", pid)
 		return
 	}
 
@@ -510,7 +508,7 @@ func hookProcessIntegrityProcTamp(h *Agent, e *event.EdrEvent) {
 	// if we found the main thread of pid
 	hThread, err := kernel32.OpenThread(kernel32.THREAD_SUSPEND_RESUME, win32.FALSE, win32.DWORD(mainTid))
 	if err != nil {
-		log.Errorf("Cannot open main thread before checking integrity of PID=%d", pid)
+		h.logger.Errorf("Cannot open main thread before checking integrity of PID=%d", pid)
 		return
 	}
 	// close thread
@@ -521,7 +519,7 @@ func hookProcessIntegrityProcTamp(h *Agent, e *event.EdrEvent) {
 		// We check whether the thread still exists
 		checkThread, err := kernel32.OpenThread(kernel32.PROCESS_SUSPEND_RESUME, win32.FALSE, win32.DWORD(mainTid))
 		if err == nil {
-			log.Warnf("Timeout reached while waiting main thread of PID=%d", pid)
+			h.logger.Warnf("Timeout reached while waiting main thread of PID=%d", pid)
 		}
 		// close thread
 		kernel32.CloseHandle(checkThread)
@@ -532,7 +530,7 @@ func hookProcessIntegrityProcTamp(h *Agent, e *event.EdrEvent) {
 	hProcess, err := kernel32.OpenProcess(da, win32.FALSE, win32.DWORD(pid))
 
 	if err != nil {
-		log.Errorf("Cannot open process to check integrity of PID=%d: %s", pid, err)
+		h.logger.Errorf("Cannot open process to check integrity of PID=%d: %s", pid, err)
 		return
 	}
 	// close process
@@ -540,7 +538,7 @@ func hookProcessIntegrityProcTamp(h *Agent, e *event.EdrEvent) {
 
 	bdiff, slen, err := kernel32.CheckProcessIntegrity(hProcess)
 	if err != nil {
-		log.Errorf("Cannot check integrity of PID=%d: %s", pid, err)
+		h.logger.Errorf("Cannot check integrity of PID=%d: %s", pid, err)
 		return
 	}
 
@@ -576,7 +574,7 @@ func hookEnrichServices(h *Agent, e *event.EdrEvent) {
 				if svcs, err := advapi32.ServiceWin32NamesByPid(uint32(spid)); err == nil {
 					e.Set(pathSourceServices, svcs)
 				} else {
-					log.Errorf("Failed to resolve service from PID=%d: %s", spid, err)
+					h.logger.Errorf("Failed to resolve service from PID=%d: %s", spid, err)
 				}
 			}
 		}
@@ -590,7 +588,7 @@ func hookEnrichServices(h *Agent, e *event.EdrEvent) {
 				if svcs, err := advapi32.ServiceWin32NamesByPid(uint32(tpid)); err == nil {
 					e.Set(pathTargetServices, svcs)
 				} else {
-					log.Errorf("Failed to resolve service from PID=%d: %s", tpid, err)
+					h.logger.Errorf("Failed to resolve service from PID=%d: %s", tpid, err)
 				}
 			}
 		}
@@ -605,7 +603,7 @@ func hookEnrichServices(h *Agent, e *event.EdrEvent) {
 			if track.Services == "" {
 				track.Services, err = advapi32.ServiceWin32NamesByPid(uint32(track.PID))
 				if err != nil {
-					log.Errorf("Failed to resolve service from PID=%d Image=%s", track.PID, track.Image)
+					h.logger.Errorf("Failed to resolve service from PID=%d Image=%s", track.PID, track.Image)
 					track.Services = unkFieldValue
 				}
 			}
@@ -617,7 +615,7 @@ func hookEnrichServices(h *Agent, e *event.EdrEvent) {
 		if pid, ok := e.GetInt(pathSysmonProcessId); ok {
 			services, err := advapi32.ServiceWin32NamesByPid(uint32(pid))
 			if err != nil {
-				log.Errorf("Failed to resolve service from PID=%d: %s", pid, err)
+				h.logger.Errorf("Failed to resolve service from PID=%d: %s", pid, err)
 				services = unkFieldValue
 			}
 			e.Set(pathServices, services)
@@ -759,7 +757,7 @@ func hookClipboardEvents(h *Agent, e *event.EdrEvent) {
 		if fi, err := os.Stat(path); err == nil {
 			// limit size of ClipboardData to 1 Mega
 			if fi.Mode().IsRegular() && fi.Size() < utils.Mega {
-				if data, err := ioutil.ReadFile(path); err == nil {
+				if data, err := os.ReadFile(path); err == nil {
 					// We try to decode utf16 content because regexp can only match utf8
 					// Thus doing this is needed to apply detection rule on clipboard content
 					if enc, err := utils.Utf16ToUtf8(data); err == nil {

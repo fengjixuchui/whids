@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"log"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -21,7 +20,9 @@ import (
 	"github.com/0xrawsec/whids/api/server"
 	"github.com/0xrawsec/whids/event"
 	"github.com/0xrawsec/whids/ioc"
+	"github.com/0xrawsec/whids/los"
 	"github.com/0xrawsec/whids/sysmon"
+	"github.com/0xrawsec/whids/tools"
 	"github.com/0xrawsec/whids/utils"
 )
 
@@ -104,7 +105,20 @@ var (
 			Key:  filepath.Join(mroot, "key.pem"),
 		},
 	}
+
+	// tools deployment
+	osqueryBin         []byte
+	osqueryTestBinPath = filepath.Join("data", fmt.Sprintf("%s.%s%s", los.OS, tools.ToolOSQueryi, los.ExecExt))
 )
+
+func init() {
+	var err error
+
+	if osqueryBin, err = os.ReadFile(osqueryTestBinPath); err != nil {
+		panic(err)
+	}
+
+}
 
 func generateCert(c server.ManagerConfig) {
 	hosts := []string{c.AdminAPI.Host, c.EndpointAPI.Host}
@@ -176,6 +190,9 @@ func prepareManager() (m *server.Manager, cconf cconfig.Client) {
 	// already exists
 	m.CreateNewAdminAPIUser(testAdminUser)
 
+	osquery := tools.New(los.OS, tools.ToolOSQueryi, "osquery", osqueryBin)
+	m.TestAddTool(osquery)
+
 	m.AddEndpoint(cconf.UUID, cconf.Key)
 	if err := m.AddIoCs(randomIoCs(1000)); err != nil {
 		panic(err)
@@ -243,12 +260,14 @@ func testHook(h *Agent, e *event.EdrEvent) {
 }
 
 func TestAgent(t *testing.T) {
+	tt := toast.FromT(t)
 	defer cleanup()
-	_, clConf := prepareManager()
+
+	manager, clConf := prepareManager()
+	manager.Logger.ErrorHandler = tt.CheckErr
 
 	installSysmon()
 
-	tt := toast.FromT(t)
 	var gotSysmonEvent bool
 
 	tmp, err := utils.HidsMkTmpDir()
@@ -256,6 +275,8 @@ func TestAgent(t *testing.T) {
 	defer os.RemoveAll(tmp)
 
 	c := BuildDefaultConfig(tmp)
+	// make logger log to stdout
+	c.Logfile = ""
 	c.FwdConfig.Local = false
 	c.FwdConfig.Client = clConf
 	c.Actions = config.Actions{
@@ -266,10 +287,8 @@ func TestAgent(t *testing.T) {
 		Critical:         []string{},
 	}
 
-	log.SetOutput(os.Stdout)
 	a, err := NewAgent(c)
-	// show EDR logs in console
-	log.SetOutput(os.Stdout)
+	a.logger.ErrorHandler = tt.CheckErr
 	// reduce scheduled task ticker
 	for _, t := range a.scheduler.Tasks() {
 		if t.Tick() > 0 {
@@ -303,5 +322,9 @@ func TestAgent(t *testing.T) {
 
 	tt.Assert(gotSysmonEvent, "failed to monitor Sysmon events")
 
-	t.Log(utils.PrettyJsonOrPanic(a.tracker.Modules()))
+	t.Log(utils.PrettyJsonOrPanic(a.Report(false)))
+
+	a.WaitWithTimeout(time.Second * 15)
+
+	a.LogStats()
 }

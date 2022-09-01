@@ -6,19 +6,17 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/0xrawsec/golang-utils/fsutil/fswalker"
-	"github.com/0xrawsec/golang-utils/log"
 	"github.com/google/uuid"
 )
 
 const (
-	// DefaultPerms default permissions for output files
-	DefaultPerms = 0740
+	// DefaultFileModeFile default permissions for output files
+	DefaultFileModeFile = 0740
 )
 
 // CountFiles counts files in a directory
@@ -30,26 +28,26 @@ func CountFiles(directory string) (cnt int) {
 }
 
 // GzipFileBestSpeed compresses a file to gzip and deletes the original file
-func GzipFileBestSpeed(path string) (err error) {
+func GzipFileBestSpeed(path string) (last error) {
+	var src, dst *os.File
+
 	fname := fmt.Sprintf("%s.gz", path)
 	partname := fmt.Sprintf("%s.part", fname)
 
-	f, err := os.Open(path)
-	if err != nil {
+	if src, last = os.Open(path); last != nil {
 		return
 	}
-	defer f.Close()
+	defer src.Close()
 
-	of, err := os.Create(partname)
-	if err != nil {
+	if dst, last = os.Create(partname); last != nil {
 		return
 	}
-	defer of.Close()
+	defer dst.Close()
 
 	// if valid level error returned is nil so no need to handle it
-	w, _ := gzip.NewWriterLevel(of, gzip.BestSpeed)
+	w, _ := gzip.NewWriterLevel(dst, gzip.BestSpeed)
 	defer w.Close()
-	if _, err := io.Copy(w, f); err != nil {
+	if _, err := io.Copy(w, src); err != nil {
 		return err
 	}
 
@@ -57,21 +55,26 @@ func GzipFileBestSpeed(path string) (err error) {
 	w.Flush()
 	w.Close()
 	// original file
-	f.Close()
+	src.Close()
 	// part file
-	of.Close()
-	log.Infof("Removing original dumpfile: %s", path)
+	dst.Close()
+
 	if err := os.Remove(path); err != nil {
-		log.Errorf("Cannot remove original dumpfile: %s", err)
+		last = fmt.Errorf("cannot remove original dumpfile: %w", err)
 	}
+
+	if err := os.Rename(partname, fname); err != nil {
+		last = err
+	}
+
 	// rename the file to its final name
-	return os.Rename(partname, fname)
+	return last
 }
 
 // HidsMkdirAll is a wrapper around os.MkdirAll with appropriate
 // permissions
 func HidsMkdirAll(dir string) error {
-	return os.MkdirAll(dir, DefaultPerms)
+	return os.MkdirAll(dir, DefaultFileModeFile)
 }
 
 func HidsMkTmpDir() (dir string, err error) {
@@ -91,13 +94,13 @@ func HidsMkTmpDir() (dir string, err error) {
 
 // HidsCreateFile creates a file with the good permissions
 func HidsCreateFile(filename string) (*os.File, error) {
-	return os.OpenFile(filename, os.O_CREATE|os.O_TRUNC|os.O_RDWR, DefaultPerms)
+	return os.OpenFile(filename, os.O_CREATE|os.O_TRUNC|os.O_RDWR, DefaultFileModeFile)
 }
 
-// HidsWriteData is a wrapper around ioutil.WriteFile to write a file
+// HidsWriteData is a wrapper around os.WriteFile to write a file
 // with the good permissions
 func HidsWriteData(dest string, data []byte) error {
-	return ioutil.WriteFile(dest, data, DefaultPerms)
+	return os.WriteFile(dest, data, DefaultFileModeFile)
 }
 
 // HidsWriteReader writes the content of a reader to a destination file. If
@@ -138,7 +141,7 @@ func IsPipePath(path string) bool {
 
 // ReadFileString reads bytes from a file
 func ReadFileString(path string) (string, error) {
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	return string(b), err
 }
 

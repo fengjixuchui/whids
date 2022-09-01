@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -151,7 +150,7 @@ func (f *FileUpload) Dump(root string) (err error) {
 
 	// Create directory if doesn't exist
 	if !fsutil.IsDir(dirpath) {
-		if err = os.MkdirAll(dirpath, utils.DefaultPerms); err != nil {
+		if err = os.MkdirAll(dirpath, utils.DefaultFileModeFile); err != nil {
 			return
 		}
 	}
@@ -179,7 +178,7 @@ func (f *FileUpload) write(root string) (err error) {
 
 		for i := 1; i < f.Total; i++ {
 			chunkPath := fmt.Sprintf("%s.%d", path, i)
-			if content, err = ioutil.ReadFile(chunkPath); err != nil {
+			if content, err = os.ReadFile(chunkPath); err != nil {
 				return
 			}
 
