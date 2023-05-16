@@ -13,7 +13,7 @@ import (
 	"github.com/0xrawsec/whids/api"
 	"github.com/0xrawsec/whids/api/server"
 	"github.com/0xrawsec/whids/utils"
-	"github.com/pelletier/go-toml"
+	"github.com/pelletier/go-toml/v2"
 )
 
 const (
@@ -109,7 +109,13 @@ func main() {
 	config := flag.Arg(0)
 
 	if keygen {
-		key := utils.UnsafeKeyGen(api.DefaultKeySize)
+		var key string
+		var err error
+
+		if key, err = utils.NewKey(api.DefaultKeySize); err != nil {
+			logger.Abort(exitFail, "failed to generate new key:", err)
+		}
+
 		fmt.Printf("New API key: %s\n", key)
 		fmt.Printf("Please manually update client and manager configuration file to make it effective\n")
 		os.Exit(0)
@@ -126,7 +132,7 @@ func main() {
 
 	if dumpConfig {
 		enc := toml.NewEncoder(os.Stdout)
-		enc.Order(toml.OrderPreserve)
+		//enc.Order(toml.OrderPreserve)
 		if err := enc.Encode(simpleManagerConfig); err != nil {
 			panic(err)
 		}
@@ -144,10 +150,11 @@ func main() {
 	}
 
 	if user != "" {
+
 		u := &server.AdminAPIUser{
-			Uuid:       utils.UnsafeUUIDGen().String(),
+			Uuid:       utils.UUIDOrPanic().String(),
 			Identifier: user,
-			Key:        utils.UnsafeKeyGen(api.DefaultKeySize),
+			Key:        utils.NewKeyOrPanic(api.DefaultKeySize),
 		}
 
 		manager, err = server.NewManager(managerConf)

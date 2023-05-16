@@ -71,8 +71,8 @@ func TestClientContainer(t *testing.T) {
 	niocs := 1000
 	iocs := make([]ioc.IOC, 0, niocs)
 	del := 0
-	guuid := utils.UnsafeUUIDGen().String()
-	toDelGuuid := utils.UnsafeUUIDGen().String()
+	guuid := utils.UUIDOrPanic().String()
+	toDelGuuid := utils.UUIDOrPanic().String()
 	for i := 0; i < niocs; i++ {
 		key := guuid
 		if rand.Int()%3 == 0 {
@@ -81,7 +81,7 @@ func TestClientContainer(t *testing.T) {
 		}
 
 		iocs = append(iocs, ioc.IOC{
-			Uuid:      utils.UnsafeUUIDGen().String(),
+			Uuid:      utils.UUIDOrPanic().String(),
 			GroupUuid: key,
 			Source:    "Test",
 			Value:     fmt.Sprintf("%d.random.com", i),
@@ -100,7 +100,7 @@ func TestClientContainer(t *testing.T) {
 	tt.Assert(len(strIocs) == niocs)
 	// we control that the integrity of what we received
 	rsha256, _ := c.GetIoCsSha256()
-	tt.Assert(rsha256 == utils.Sha256StringArray(strIocs))
+	tt.Assert(rsha256 == utils.Sha256StringSlice(strIocs))
 
 	// deleting iocs from admin API
 	req := prepare("DELETE",
@@ -115,7 +115,7 @@ func TestClientContainer(t *testing.T) {
 	tt.Assert(len(strIocs) == niocs-del)
 	rsha256, _ = c.GetIoCsSha256()
 	// control integrity of what we downloaded
-	tt.Assert(rsha256 == utils.Sha256StringArray(strIocs))
+	tt.Assert(rsha256 == utils.Sha256StringSlice(strIocs))
 }
 
 func TestClientExecuteCommand(t *testing.T) {

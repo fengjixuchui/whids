@@ -18,7 +18,7 @@ import (
 	"github.com/0xrawsec/whids/agent/config"
 	"github.com/0xrawsec/whids/agent/sysinfo"
 	"github.com/0xrawsec/whids/utils"
-	"github.com/pelletier/go-toml"
+	"github.com/pelletier/go-toml/v2"
 	"golang.org/x/sys/windows/svc"
 
 	"github.com/0xrawsec/golang-utils/crypto/data"
@@ -89,7 +89,7 @@ func configure() error {
 	defer writer.Close()
 
 	enc := toml.NewEncoder(writer)
-	enc.Order(toml.OrderPreserve)
+	//enc.Order(toml.OrderPreserve)
 	if err := enc.Encode(DefaultHIDSConfig); err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func runHids(service bool) {
 	var err error
 	var hidsConf config.Agent
 
-	logger.Infof("Running HIDS as Windows service: %t", service)
+	logger.Infof("Running EDR as Windows service: %t", service)
 
 	hidsConf, err = config.LoadAgentConfig(configFile)
 	if err != nil {
@@ -152,7 +152,7 @@ func runHids(service bool) {
 
 	edrAgent, err = agent.NewAgent(&hidsConf)
 	if err != nil {
-		logger.Abort(exitFail, fmt.Errorf("failed to create HIDS: %s", err))
+		logger.Abort(exitFail, fmt.Errorf("failed to create EDR: %s", err))
 	}
 
 	edrAgent.DryRun = flagDryRun
@@ -171,7 +171,10 @@ func runHids(service bool) {
 	}
 
 	// Runs HIDS and wait for the output
-	edrAgent.Run()
+	if err = edrAgent.Run(); err != nil {
+		logger.Abort(exitFail, fmt.Errorf("failed to run EDR: %s", err))
+	}
+
 	if !service {
 		edrAgent.Wait()
 	}
@@ -308,7 +311,7 @@ func main() {
 	if flagDumpConfig || flagConfigure {
 		writer := os.Stdout
 		enc := toml.NewEncoder(writer)
-		enc.Order(toml.OrderPreserve)
+		//enc.Order(toml.OrderPreserve)
 		if err := enc.Encode(DefaultHIDSConfig); err != nil {
 			logger.Abort(exitFail, err)
 		}
@@ -351,11 +354,11 @@ func main() {
 			}
 		}
 
-		if err := os.WriteFile(prules, rules.Bytes(), utils.DefaultFileModeFile); err != nil {
+		if err := os.WriteFile(prules, rules.Bytes(), utils.DefaultFilePerm); err != nil {
 			logger.Abort(exitFail, fmt.Sprintf("failed to import rules: %s", err))
 		}
 
-		if err := os.WriteFile(psha256, []byte(data.Sha256(rules.Bytes())), utils.DefaultFileModeFile); err != nil {
+		if err := os.WriteFile(psha256, []byte(data.Sha256(rules.Bytes())), utils.DefaultFilePerm); err != nil {
 			logger.Abort(exitFail, fmt.Sprintf("failed to import rules: %s", err))
 		}
 
@@ -374,14 +377,14 @@ func main() {
 
 	// set logfile the time the service starts
 	if agentCfg.Logfile != "" {
-		if logger, err = golog.FromPath(agentCfg.Logfile, utils.DefaultFileModeFile); err != nil {
+		if logger, err = golog.FromPath(agentCfg.Logfile, utils.DefaultFilePerm); err != nil {
 			golog.Stdout.Error("failed to open logfile", agentCfg.Logfile, err)
 		}
 	}
 
 	// if we failed at opening logfile configured
 	if logger == nil {
-		if logger, err = golog.FromPath(logFallback, utils.DefaultFileModeFile); err != nil {
+		if logger, err = golog.FromPath(logFallback, utils.DefaultFilePerm); err != nil {
 			golog.Stdout.Error("failed to open logfile", err)
 			logger = golog.Stdout
 		}

@@ -44,12 +44,11 @@ var (
 	  <ImageLoad onmatch="exclude"></ImageLoad>
 
     <ProcessAccess onmatch="exclude">
-      <GrantedAccess condition="is">0x1000</GrantedAccess>
-      <GrantedAccess condition="is">0x1400</GrantedAccess>
       <GrantedAccess condition="is">0x2000</GrantedAccess>
-      <GrantedAccess condition="is">0x3000</GrantedAccess>
       <GrantedAccess condition="is">0x100000</GrantedAccess>
-      <GrantedAccess condition="is">0x101000</GrantedAccess>
+      <SourceImage condition="is">C:\Windows\system32\taskmgr.exe</SourceImage>
+      <!-- Microsoft Defender -->
+		  <SourceImage condition="contains all">C:\ProgramData\Microsoft\Windows Defender\Platform\;\MsMpEng.exe</SourceImage>
     </ProcessAccess>
 
 	  <RegistryEvent onmatch="exclude">
@@ -60,6 +59,10 @@ var (
   </EventFiltering>
 </Sysmon>`
 )
+
+func SetAgnosticConfig(template string) {
+	agnosticConfig = template
+}
 
 func AgnosticConfig(schemaversion string) (c *Config, err error) {
 

@@ -58,7 +58,9 @@ var (
 
 	archivedRe = regexp.MustCompile(`(CLIP-)??[0-9A-F]{32,}(\..*)?`)
 
-	toolsDir = utils.RelativePath("Tools")
+	toolsDir = utils.BinRelativePath("Tools")
+
+	u32PID = uint32(os.Getpid())
 )
 
 // Agent structure
@@ -166,7 +168,9 @@ func (a *Agent) Prepare(c *config.Agent) (err error) {
 	a.actionHandler = NewActionHandler(a)
 
 	// Creates missing directories
-	c.Prepare()
+	if err = c.Prepare(); err != nil {
+		return
+	}
 
 	// Create logfile asap if needed
 	if c.Logfile != "" {
@@ -237,10 +241,12 @@ func (a *Agent) initEventProvider() {
 	}
 
 	// open traces
-	for _, trace := range a.config.EtwConfig.UnifiedTraces() {
-		if err := a.eventProvider.OpenTrace(trace); err != nil {
-			a.logger.Errorf("Failed to open trace %s: %s", trace, err)
-		}
+	a.eventProvider.FromTraceNames(a.config.EtwConfig.UnifiedTraces()...)
+
+	// if we have file trace enabled
+	if a.config.EtwConfig.FileTraceEnabled() {
+		a.eventProvider.EventRecordCallback = a.eventRecordCallback
+		a.eventProvider.PreparedCallback = a.preparedCallback
 	}
 
 }
@@ -407,7 +413,7 @@ func (a *Agent) needsRulesUpdate() bool {
 		return false
 	}
 
-	oldSha256, _ = utils.ReadFileString(rulesSha256Path)
+	oldSha256, _ = utils.ReadFileAsString(rulesSha256Path)
 
 	// log message only if we need to update
 	if oldSha256 != sha256 {
@@ -431,7 +437,7 @@ func (a *Agent) needsIoCsUpdate() bool {
 
 	// means that remoteCont is also a local container
 	remoteSha256, _ = a.forwarder.Client.GetIoCsSha256()
-	localSha256, _ = utils.ReadFileString(locContSha256Path)
+	localSha256, _ = utils.ReadFileAsString(locContSha256Path)
 
 	// log message only if we need to update
 	if localSha256 != remoteSha256 {
@@ -489,7 +495,7 @@ func (a *Agent) fetchIoCsFromManager() (err error) {
 	}
 
 	// we compare the integrity of the container received
-	compSha256 := utils.Sha256StringArray(iocs)
+	compSha256 := utils.Sha256StringSlice(iocs)
 
 	if sha256, err := cl.GetIoCsSha256(); err != nil {
 		return fmt.Errorf("failed to get IoCs sha256: %s", err)
@@ -564,7 +570,7 @@ func (a *Agent) updateSystemInfo() (err error) {
 	var hnew, hold string
 
 	new := sysinfo.NewSystemInfo()
-	if hnew, err = utils.Sha1Interface(new); err != nil {
+	if hnew, err = utils.Sha256Interface(new); err != nil {
 		// we return cause we don't want to overwrite with
 		// a faulty structure
 		return
@@ -572,7 +578,7 @@ func (a *Agent) updateSystemInfo() (err error) {
 
 	// if it returns an error we don't really care because
 	// it will be replaced by new
-	hold, _ = utils.Sha1Interface(a.systemInfo)
+	hold, _ = utils.Sha256Interface(a.systemInfo)
 
 	if hnew != hold {
 		a.systemInfo = new
@@ -820,14 +826,126 @@ func (a *Agent) Report(light bool) (r Report) {
 	return
 }
 
+func (a *Agent) eventScanRoutine() {
+	var kernelTracked bool
+	var rtlost uint
+
+	// Trying to raise thread priority
+	if err := kernel32.SetCurrentThreadPriority(win32.THREAD_PRIORITY_ABOVE_NORMAL); err != nil {
+		a.logger.Errorf("Failed to raise IDS thread priority: %s", err)
+	}
+
+	for e := range a.eventProvider.Events {
+		event := event.NewEdrEvent(e)
+
+		if uint64(a.stats.counter.event)%1000 == 0 && a.eventProvider.LostEvents > 0 {
+			a.logger.Warnf("Received %d RTLostEvent events, if the agent went off for a while this is normal. If you see this message at every boot or more often it is a symptom of a bad ETW configuration (more events are received than the agent can process).", a.eventProvider.LostEvents)
+			if rtlost > 5 {
+				a.logger.Criticalf("Several events lost, something is wrong with ETW configuration")
+			}
+			// we reset the counter of lost events not to trigger this all the time
+			a.eventProvider.LostEvents = 0
+			rtlost++
+		}
+
+		if yes, eps := a.stats.HasPerfIssue(); yes {
+			a.logger.Warnf("Average event rate above limit of %.2f e/s in the last %s: %.2f e/s", a.stats.Threshold(), a.stats.Duration(), eps)
+
+			if a.stats.HasCriticalPerfIssue() {
+				a.logger.Critical("Event throughput too high for too long, consider filtering out events")
+			} else if crit := a.stats.CriticalEPS(); eps > crit {
+				a.logger.Criticalf("Event throughput above %.0fx the limit, if repeated consider filtering out events", eps/a.stats.Threshold())
+			}
+		}
+
+		// tracking kernel
+		if !kernelTracked {
+			if kernelTracked = a.tracker.TrackKernel(event); kernelTracked {
+				a.logger.Infof("Found kernel GUID=%s PID=%d", a.tracker.kernel.ProcessGUID, a.tracker.kernel.PID)
+			}
+		}
+
+		// Warning message in certain circumstances
+		if a.config.EnableHooks && !a.flagProcTermEn && a.stats.Events() > 0 && int64(a.stats.Events())%1000 == 0 {
+			a.logger.Warn("Sysmon process termination events seem to be missing. WHIDS won't work as expected.")
+		}
+
+		a.RLock()
+
+		// Runs pre detection hooks
+		// putting this before next condition makes the processTracker registering
+		// HIDS events and allows detecting ProcessAccess events from HIDS childs
+		a.preHooks.RunHooksOn(a, event)
+
+		// We skip if it is one of IDS event
+		// we keep process termination event because it is used to control if process termination is enabled
+		if a.IsHIDSEvent(event) && !isSysmonProcessTerminate(event) {
+			if a.PrintAll {
+				fmt.Println(utils.JsonStringOrPanic(event))
+			}
+			goto CONTINUE
+		}
+
+		// if event is skipped we don't log it even with PrintAll
+		if event.IsSkipped() {
+			a.stats.Update(event)
+			goto CONTINUE
+		}
+
+		// if the event has matched at least one signature or is filtered
+		if n, crit, filtered := a.Engine.MatchOrFilter(event); len(n) > 0 || filtered {
+			switch {
+			case crit >= a.config.CritTresh:
+				if !a.PrintAll && !a.config.LogAll {
+					if err := a.forwarder.PipeEvent(event); err != nil {
+						a.logger.Errorf("failed to pipe event: %s", err)
+					}
+				}
+				// Pipe the event to be sent to the forwarder
+				// Run hooks post detection
+				a.postHooks.RunHooksOn(a, event)
+				a.stats.Update(event)
+			case filtered && a.config.EnableFiltering && !a.PrintAll && !a.config.LogAll:
+				//event.Del(&engine.GeneInfoPath)
+				// we pipe filtered event
+				if err := a.forwarder.PipeEvent(event); err != nil {
+					a.logger.Errorf("failed to pipe event: %s", err)
+				}
+			}
+		}
+
+		// we queue event in action handler
+		a.actionHandler.Queue(event)
+
+		// Print everything
+		if a.PrintAll {
+			fmt.Println(utils.JsonStringOrPanic(event))
+		}
+
+		// We log all events
+		if a.config.LogAll {
+			if err := a.forwarder.PipeEvent(event); err != nil {
+				a.logger.Errorf("failed to pipe event: %s", err)
+			}
+		}
+
+		a.stats.Update(event)
+
+	CONTINUE:
+		a.RUnlock()
+	}
+
+	a.logger.Infof("HIDS main loop terminated")
+}
+
 // Run starts the WHIDS engine and waits channel listening is stopped
-func (a *Agent) Run() {
+func (a *Agent) Run() (err error) {
 
 	// start task scheduler
 	a.scheduler.Start()
 
 	for _, t := range a.scheduler.Tasks() {
-		a.logger.Infof("Scheduler running: %s", t.Name)
+		a.logger.Infof("Scheduler running: %s (async=%t) (scheduled=%t)", t.Name, t.IsAsync(), t.IsScheduled())
 	}
 
 	// Dry run don't do anything
@@ -839,7 +957,9 @@ func (a *Agent) Run() {
 	}
 
 	// Starting event provider
-	a.eventProvider.Start()
+	if err = a.eventProvider.Start(); err != nil {
+		return
+	}
 
 	// start stats monitoring
 	a.stats.Start()
@@ -847,94 +967,13 @@ func (a *Agent) Run() {
 	a.waitGroup.Add(1)
 	go func() {
 		defer a.waitGroup.Done()
-
-		// Trying to raise thread priority
-		if err := kernel32.SetCurrentThreadPriority(win32.THREAD_PRIORITY_ABOVE_NORMAL); err != nil {
-			a.logger.Errorf("Failed to raise IDS thread priority: %s", err)
-		}
-
-		for e := range a.eventProvider.Events {
-			event := event.NewEdrEvent(e)
-
-			if yes, eps := a.stats.HasPerfIssue(); yes {
-				a.logger.Warnf("Average event rate above limit of %.2f e/s in the last %s: %.2f e/s", a.stats.Threshold(), a.stats.Duration(), eps)
-
-				if a.stats.HasCriticalPerfIssue() {
-					a.logger.Critical("Event throughput too high for too long, consider filtering out events")
-				} else if crit := a.stats.CriticalEPS(); eps > crit {
-					a.logger.Criticalf("Event throughput above %.0fx the limit, if repeated consider filtering out events", eps/a.stats.Threshold())
-				}
-			}
-
-			// Warning message in certain circumstances
-			if a.config.EnableHooks && !a.flagProcTermEn && a.stats.Events() > 0 && int64(a.stats.Events())%1000 == 0 {
-				a.logger.Warn("Sysmon process termination events seem to be missing. WHIDS won't work as expected.")
-			}
-
-			a.RLock()
-
-			// Runs pre detection hooks
-			// putting this before next condition makes the processTracker registering
-			// HIDS events and allows detecting ProcessAccess events from HIDS childs
-			a.preHooks.RunHooksOn(a, event)
-
-			// We skip if it is one of IDS event
-			// we keep process termination event because it is used to control if process termination is enabled
-			if a.IsHIDSEvent(event) && !isSysmonProcessTerminate(event) {
-				if a.PrintAll {
-					fmt.Println(utils.JsonStringOrPanic(event))
-				}
-				goto CONTINUE
-			}
-
-			// if event is skipped we don't log it even with PrintAll
-			if event.IsSkipped() {
-				a.stats.Update(event)
-				goto CONTINUE
-			}
-
-			// if the event has matched at least one signature or is filtered
-			if n, crit, filtered := a.Engine.MatchOrFilter(event); len(n) > 0 || filtered {
-				switch {
-				case crit >= a.config.CritTresh:
-					if !a.PrintAll && !a.config.LogAll {
-						a.forwarder.PipeEvent(event)
-					}
-					// Pipe the event to be sent to the forwarder
-					// Run hooks post detection
-					a.postHooks.RunHooksOn(a, event)
-					a.stats.Update(event)
-				case filtered && a.config.EnableFiltering && !a.PrintAll && !a.config.LogAll:
-					//event.Del(&engine.GeneInfoPath)
-					// we pipe filtered event
-					a.forwarder.PipeEvent(event)
-				}
-			}
-
-			// we queue event in action handler
-			a.actionHandler.Queue(event)
-
-			// Print everything
-			if a.PrintAll {
-				fmt.Println(utils.JsonStringOrPanic(event))
-			}
-
-			// We log all events
-			if a.config.LogAll {
-				a.forwarder.PipeEvent(event)
-			}
-
-			a.stats.Update(event)
-
-		CONTINUE:
-			a.RUnlock()
-		}
-		a.logger.Infof("HIDS main loop terminated")
+		a.eventScanRoutine()
 	}()
 
 	// Run bogus command so that at least one Process Terminate
 	// is generated (used to check if process termination events are enabled)
 	exec.Command(os.Args[0], "-h").Start()
+	return
 }
 
 // LogStats logs whids statistics

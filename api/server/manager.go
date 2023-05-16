@@ -31,7 +31,7 @@ import (
 	"github.com/0xrawsec/whids/sysmon"
 	"github.com/0xrawsec/whids/tools"
 	"github.com/0xrawsec/whids/utils"
-	"github.com/pelletier/go-toml"
+	"github.com/pelletier/go-toml/v2"
 
 	"github.com/0xrawsec/gene/v2/engine"
 	"github.com/0xrawsec/gene/v2/reducer"
@@ -247,7 +247,7 @@ func NewManager(c *ManagerConfig) (*Manager, error) {
 		return nil, fmt.Errorf("manager Admin API Error: invalid port to listen to %d", c.EndpointAPI.Port)
 	}
 
-	if err := os.MkdirAll(c.Logging.Root, utils.DefaultFileModeFile); err != nil {
+	if err := os.MkdirAll(c.Logging.Root, utils.DefaultFilePerm); err != nil {
 		return nil, fmt.Errorf("failed at creating log directory: %s", err)
 	}
 
@@ -270,7 +270,7 @@ func NewManager(c *ManagerConfig) (*Manager, error) {
 
 	// Dump Directory initialization
 	if m.Config.DumpDir != "" && !fsutil.IsDir(m.Config.DumpDir) {
-		if err := os.MkdirAll(m.Config.DumpDir, utils.DefaultFileModeFile); err != nil {
+		if err := os.MkdirAll(m.Config.DumpDir, utils.DefaultFilePerm); err != nil {
 			return &m, fmt.Errorf("failed to created dump directory (%s): %s", m.Config.DumpDir, err)
 		}
 	}
